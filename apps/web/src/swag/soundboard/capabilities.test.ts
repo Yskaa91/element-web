@@ -13,8 +13,16 @@ import { SOUNDBOARD_EVENT_TYPE, soundboardCapabilities, spaceParentRoomIds } fro
 const ROOM_ID = "!call:example.org";
 const SPACE_ID = "!space:example.org";
 
-function clientWithParents(parents: string[]): MatrixClient {
-    const events = parents.map((spaceRoomId) => ({ getStateKey: () => spaceRoomId }));
+function clientWithParents(
+    parents: (string | { roomId: string; canonical: boolean })[],
+): MatrixClient {
+    const events = parents.map((parent) => {
+        const { roomId, canonical } = typeof parent === "string" ? { roomId: parent, canonical: undefined } : parent;
+        return {
+            getStateKey: () => roomId,
+            getContent: () => (canonical === undefined ? {} : { canonical }),
+        };
+    });
     const state = { getStateEvents: vi.fn(() => events) };
     const room = { getLiveTimeline: () => ({ getState: () => state }) };
     return { getRoom: vi.fn(() => room) } as unknown as MatrixClient;
@@ -36,6 +44,28 @@ describe("spaceParentRoomIds", () => {
 
     it("ignores empty state keys", () => {
         expect(spaceParentRoomIds(clientWithParents(["", SPACE_ID]), ROOM_ID)).toEqual([SPACE_ID]);
+    });
+
+    it("lists the canonical parent first", () => {
+        const parents = spaceParentRoomIds(
+            clientWithParents([
+                { roomId: "!other:example.org", canonical: false },
+                { roomId: SPACE_ID, canonical: true },
+            ]),
+            ROOM_ID,
+        );
+        expect(parents[0]).toBe(SPACE_ID);
+    });
+
+    it("keeps the room's own order when none is canonical", () => {
+        const parents = spaceParentRoomIds(
+            clientWithParents([
+                { roomId: "!first:example.org", canonical: false },
+                { roomId: SPACE_ID, canonical: false },
+            ]),
+            ROOM_ID,
+        );
+        expect(parents).toEqual(["!first:example.org", SPACE_ID]);
     });
 });
 

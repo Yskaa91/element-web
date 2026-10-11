@@ -23,7 +23,10 @@ export const SOUNDBOARD_EVENT_TYPE = "io.element.call.soundboard";
  * Finds the spaces a room is a child of.
  *
  * A room's `m.space.parent` state events are keyed by the space room id, so the
- * state key is the space room id.
+ * state key is the space room id. A room can be in several spaces; the canonical
+ * parent (`content.canonical === true`) is listed first, matching Element Call's
+ * `resolveSpaceRoomId`, which picks it. When no parent is canonical the order is
+ * the room's own.
  */
 export function spaceParentRoomIds(client: MatrixClient, roomId: string | undefined): string[] {
     if (!roomId) return [];
@@ -31,10 +34,13 @@ export function spaceParentRoomIds(client: MatrixClient, roomId: string | undefi
     if (!room) return [];
     const state = room.getLiveTimeline().getState(Direction.Forward);
     if (!state) return [];
-    return state
-        .getStateEvents(EventType.SpaceParent)
-        .map((event) => event.getStateKey())
-        .filter((stateKey): stateKey is string => typeof stateKey === "string" && stateKey.length > 0);
+    const parents = state.getStateEvents(EventType.SpaceParent).filter((event) => {
+        const stateKey = event.getStateKey();
+        return typeof stateKey === "string" && stateKey.length > 0;
+    });
+    const canonical = parents.filter((event) => event.getContent()?.canonical === true);
+    const rest = parents.filter((event) => event.getContent()?.canonical !== true);
+    return [...canonical, ...rest].map((event) => event.getStateKey()!);
 }
 
 /**
