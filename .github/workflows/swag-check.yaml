@@ -1,0 +1,41 @@
+name: swag check
+on:
+  push:
+    branches: ["swag"]
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+        with:
+          # package.json declares pnpm in devEngines.packageManager, which
+          # action-setup@v4 does not read, so state it explicitly.
+          version: 11.23.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The shared-components unit tests run in a real browser.
+      - uses: ./.github/actions/setup-playwright
+        with:
+          write-cache: "true"
+      # The test suites import the published workspace packages, so their dist
+      # has to exist before the tests run.
+      - name: Build workspace packages
+        run: pnpm nx run-many -t build -p @element-hq/element-web-module-api @element-hq/element-web-shared-utils @element-hq/web-shared-components
+      - name: Unit tests
+        run: |
+          pnpm --filter @element-hq/web-shared-components exec vitest run --project unit src/swag src/room-list/VirtualizedRoomListView/RoomListItemWrapper/RoomListItemView
+          pnpm --filter element-web exec vitest run --project unit src/viewmodels/room-list/RoomListItemViewModel.test.ts
+      - name: Type-check
+        run: pnpm nx run-many -t lint:types -p @element-hq/web-shared-components element-web
