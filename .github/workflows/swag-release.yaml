@@ -8,9 +8,8 @@ on:
         description: Tag to build (e.g. v1.12.30-swag.1)
         required: true
       ec_tag:
-        description: Element Call swag tag to embed
-        required: true
-        default: v0.26.1-swag.1
+        description: Element Call swag tag to embed (overrides .github/swag-ec-tag)
+        required: false
 permissions:
   contents: write
 jobs:
@@ -18,19 +17,41 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       SWAG_TAG: ${{ github.event.inputs.tag || github.ref_name }}
-      SWAG_EC_TAG: ${{ github.event.inputs.ec_tag || 'v0.26.1-swag.1' }}
     steps:
       # When dispatched with an explicit tag, build that tag's tree, not the
       # dispatch ref, so the artifact always matches the release tag.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
-      - uses: pnpm/action-setup@v4
+      # The embedded Element Call tag is a single committed source of truth
+      # (.github/swag-ec-tag) so a normal tag-push release cannot silently
+      # re-embed a stale Element Call. The dispatch input still overrides it.
+      - name: Resolve embedded Element Call tag
+        env:
+          EC_TAG_INPUT: ${{ github.event.inputs.ec_tag }}
+        run: |
+          set -euo pipefail
+          tag="${EC_TAG_INPUT:-}"
+          if [ -z "${tag}" ]; then
+            file=.github/swag-ec-tag
+            if [ ! -f "${file}" ]; then
+              echo "::error::${file} is missing — cannot resolve the embedded Element Call tag"
+              exit 1
+            fi
+            tag="$(grep -vE '^[[:space:]]*(#|$)' "${file}" | head -1)"
+            if [ -z "${tag}" ]; then
+              echo "::error::${file} has no tag — add the Element Call swag tag to embed"
+              exit 1
+            fi
+          fi
+          echo "Embedding Element Call ${tag}"
+          echo "SWAG_EC_TAG=${tag}" >> "$GITHUB_ENV"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           # package.json declares pnpm in devEngines.packageManager, which
           # action-setup@v4 does not read, so state it explicitly.
           version: 11.23.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -49,7 +70,7 @@ jobs:
         run: test "$(cat apps/web/webapp/version)" = "$SWAG_TAG" && echo "version marker ok"
       - name: Checksum
         run: cd apps/web/dist && sha256sum element-*.tar.gz > "element-$SWAG_TAG.tar.gz.sha256"
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ env.SWAG_TAG }}
           files: |
