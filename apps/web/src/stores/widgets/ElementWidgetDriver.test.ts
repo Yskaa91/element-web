@@ -957,4 +957,63 @@ describe("ElementWidgetDriver", () => {
             );
         });
     });
+
+    describe("soundboard capabilities", () => {
+        const mkCallDriver = (): WidgetDriver =>
+            new ElementWidgetDriver(
+                new Widget({
+                    id: "group_call",
+                    creatorUserId: "@alice:example.org",
+                    type: WidgetType.CALL.preferred,
+                    url: "https://call.element.io",
+                }),
+                WidgetKind.Room,
+                true,
+                "!1:example.org",
+            );
+
+        const spaceParent = mkEvent({
+            event: true,
+            id: "$space-parent",
+            type: EventType.SpaceParent,
+            user: "@alice:example.org",
+            skey: "!space:example.org",
+            content: { via: ["example.org"], canonical: true },
+            room: "!1:example.org",
+        });
+
+        function stubSpaceParents(events: MatrixEvent[]): void {
+            client.getRoom.mockReturnValue({
+                getLiveTimeline: () => ({ getState: () => ({ getStateEvents: () => events }) }),
+            } as unknown as Room);
+        }
+
+        it("grants a virtual call widget the soundboard capabilities for its space", async () => {
+            stubSpaceParents([spaceParent]);
+
+            const requestedCapabilities = new Set([
+                "org.matrix.msc2762.receive.state_event:m.space.parent",
+                "org.matrix.msc2762.receive.state_event:io.element.call.soundboard",
+                "org.matrix.msc2762.send.state_event:io.element.call.soundboard",
+                "org.matrix.msc4039.upload_file",
+                "org.matrix.msc2762.timeline:!space:example.org",
+            ]);
+
+            const approvedCapabilities = await mkCallDriver().validateCapabilities(requestedCapabilities);
+            expect(approvedCapabilities).toEqual(requestedCapabilities);
+        });
+
+        it("grants no other room's timeline when the room has no space parent", async () => {
+            stubSpaceParents([]);
+
+            const requestedCapabilities = new Set([
+                "org.matrix.msc2762.timeline:!1:example.org",
+                "org.matrix.msc2762.timeline:!other:example.org",
+            ]);
+
+            const approvedCapabilities = await mkCallDriver().validateCapabilities(requestedCapabilities);
+            expect(approvedCapabilities.has("org.matrix.msc2762.timeline:!1:example.org")).toBe(true);
+            expect(approvedCapabilities.has("org.matrix.msc2762.timeline:!other:example.org")).toBe(false);
+        });
+    });
 });
