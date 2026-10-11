@@ -35,7 +35,10 @@ import { UIComponent } from "../../settings/UIFeature";
 import { CallStore, CallStoreEvent } from "../../stores/CallStore";
 import { clearRoomNotification, setMarkedUnreadState } from "../../utils/notifications";
 import { tagRoom } from "../../utils/room/tagRoom";
+import { placeCall } from "../../utils/room/placeCall";
+import { PlatformCallType } from "../../hooks/room/useRoomCall";
 import { mediaFromMxc } from "../../customisations/Media";
+import { SDKContextClass } from "../../contexts/SDKContextClass";
 import { keepIfSame } from "../../utils/keepIfSame";
 import dispatcher from "../../dispatcher/dispatcher";
 import { Action } from "../../dispatcher/actions";
@@ -443,6 +446,24 @@ export class RoomListItemViewModel
             room_id: this.props.room.roomId,
             metricsTrigger: "RoomList",
         });
+    };
+
+    /**
+     * Open the room and join the call that is already running in it. This reuses the room header's
+     * join path, which for Element Call opens the room with the call view.
+     */
+    public onCallParticipantsClick = (): void => {
+        const call = CallStore.instance.getCall(this.props.room.roomId);
+        // Join with the same kind of call that is already running.
+        const callType = call?.callType === CallType.Voice ? CallType.Voice : CallType.Video;
+        void placeCall(
+            SDKContextClass.instance.legacyCallHandler,
+            this.props.room,
+            callType,
+            PlatformCallType.ElementCall,
+            undefined,
+            callType === CallType.Voice,
+        );
     };
 
     public onMarkAsRead = async (): Promise<void> => {
