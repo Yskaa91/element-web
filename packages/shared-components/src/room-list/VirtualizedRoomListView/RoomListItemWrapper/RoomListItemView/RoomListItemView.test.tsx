@@ -123,6 +123,25 @@ describe("<RoomListItemView />", () => {
         expect(screen.queryByTestId("notification-decoration")).toBeNull();
     });
 
+    it("should show the call participants row when the room has a call", () => {
+        render(
+            <Default
+                callParticipants={[
+                    { userId: "@alice:server", name: "Alice" },
+                    { userId: "@bob:server", name: "Bob" },
+                ]}
+            />,
+        );
+
+        expect(screen.queryByLabelText("In call: Alice, Bob")).not.toBeNull();
+    });
+
+    it("should hide the call participants row when the room has no call", () => {
+        render(<Default />);
+
+        expect(screen.queryByLabelText(/^In call:/)).toBeNull();
+    });
+
     it("should show hover menu when showMoreOptionsMenu is true", () => {
         const { container } = render(<WithHoverMenu />);
         expect(container.querySelector('[aria-label="More Options"]')).not.toBeNull();
