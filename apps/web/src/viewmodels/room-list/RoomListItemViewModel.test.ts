@@ -514,7 +514,7 @@ describe("RoomListItemViewModel", () => {
                 get callType() {
                     return callType;
                 }
-                participants = new Map([[matrixClient.getUserId()!, {}]]);
+                participants = new Map([[mockMember(matrixClient.getUserId()!), new Set<string>()]]);
             })() as unknown as Call;
             vi.spyOn(CallStore.instance, "getCall").mockReturnValue(mockCall);
 
