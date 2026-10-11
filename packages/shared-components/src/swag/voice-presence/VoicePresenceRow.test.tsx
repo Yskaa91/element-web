@@ -35,7 +35,8 @@ describe("<VoicePresenceRow />", () => {
         const { container } = render(<VoicePresenceRow participants={participants} />);
 
         expect(container.querySelectorAll('[role="img"]')).toHaveLength(3);
-        expect(screen.getByText("+2")).toBeTruthy();
+        // The item's own label summarises the people behind the chip, so it is decorative.
+        expect(screen.getByText("+2").getAttribute("aria-hidden")).toBe("true");
     });
 
     it("renders nothing when there is nobody in the call", () => {
@@ -51,21 +52,25 @@ describe("<VoicePresenceRow />", () => {
         expect(screen.getByText("B")).toBeTruthy();
     });
 
-    it("summarises every participant, in order, in the accessible name", () => {
-        render(
+    it("names every participant, in order, in the tooltip and stays out of the accessibility tree", () => {
+        const { container } = render(
             <VoicePresenceRow
                 participants={[participant("Alice"), participant("Bob"), participant("Carol"), participant("Dave")]}
             />,
         );
 
-        expect(screen.getByLabelText("In call: Alice, Bob, Carol, Dave")).toBeTruthy();
+        // The tooltip is the mouse affordance: the item's own label is what assistive tech reads.
+        expect(screen.getByTitle("In call: Alice, Bob, Carol, Dave")).toBeTruthy();
+        // Announcing the names twice would duplicate them, because the item's button label already
+        // replaces the accessible name of everything inside it.
+        expect(container.firstElementChild?.getAttribute("aria-hidden")).toBe("true");
     });
 
     it("reports a click once", () => {
         const onClick = vi.fn();
         render(<VoicePresenceRow participants={[participant("Alice")]} onClick={onClick} />);
 
-        screen.getByLabelText("In call: Alice").click();
+        screen.getByTitle("In call: Alice").click();
 
         expect(onClick).toHaveBeenCalledTimes(1);
     });
@@ -78,7 +83,7 @@ describe("<VoicePresenceRow />", () => {
             </div>,
         );
 
-        screen.getByLabelText("In call: Alice").click();
+        screen.getByTitle("In call: Alice").click();
 
         expect(onAncestorClick).not.toHaveBeenCalled();
     });

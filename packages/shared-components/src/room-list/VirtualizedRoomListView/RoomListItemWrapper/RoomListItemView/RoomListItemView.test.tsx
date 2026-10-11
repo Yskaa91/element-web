@@ -123,9 +123,9 @@ describe("<RoomListItemView />", () => {
         expect(screen.queryByTestId("notification-decoration")).toBeNull();
     });
 
-    it("should show the call participants row when the room has a call", () => {
+    it("should name the people in the room's call in the item's accessible name", () => {
         render(
-            <Default
+            <WithVoiceCall
                 callParticipants={[
                     { userId: "@alice:server", name: "Alice" },
                     { userId: "@bob:server", name: "Bob" },
@@ -133,13 +133,18 @@ describe("<RoomListItemView />", () => {
             />,
         );
 
-        expect(screen.queryByLabelText("In call: Alice, Bob")).not.toBeNull();
+        // The row itself is decorative, so the names have to reach assistive tech through the item.
+        expect(screen.getByTitle("In call: Alice, Bob")).toBeTruthy();
+        expect(
+            screen.getByRole("option", { name: "Open room General with a voice call. In call: Alice, Bob" }),
+        ).toBeTruthy();
     });
 
-    it("should hide the call participants row when the room has no call", () => {
+    it("should keep the item's accessible name unchanged when the room has no call", () => {
         render(<Default />);
 
-        expect(screen.queryByLabelText(/^In call:/)).toBeNull();
+        expect(screen.getByRole("option", { name: "Open room General" })).toBeTruthy();
+        expect(screen.queryByTitle(/^In call:/)).toBeNull();
     });
 
     it("should show hover menu when showMoreOptionsMenu is true", () => {
