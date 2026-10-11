@@ -589,6 +589,33 @@ describe("RoomListItemViewModel", () => {
             });
         });
 
+        it("should open the room and join the call when the participants row is clicked", () => {
+            const mockCall = {
+                callType: CallType.Voice,
+                participants: new Map([[mockMember("@alice:server", "Alice"), new Set<string>()]]),
+                off: vi.fn(),
+                on: vi.fn(),
+            } as unknown as Call;
+            vi.spyOn(CallStore.instance, "getCall").mockReturnValue(mockCall);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            const dispatchSpy = vi.spyOn(dispatcher, "dispatch");
+
+            viewModel.onCallParticipantsClick();
+
+            // One dispatch both opens the room and asks for the call view.
+            expect(dispatchSpy).toHaveBeenCalledTimes(1);
+            expect(dispatchSpy).toHaveBeenCalledWith({
+                action: Action.ViewRoom,
+                room_id: "!room:server",
+                view_call: true,
+                voiceOnly: true,
+                skipLobby: undefined,
+                metricsTrigger: undefined,
+            });
+        });
+
         it("should return room object", () => {
             viewModel = new RoomListItemViewModel({ room, client: matrixClient });
 
