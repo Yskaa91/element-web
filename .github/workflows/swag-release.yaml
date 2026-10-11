@@ -1,0 +1,49 @@
+name: swag release
+on:
+  push:
+    tags: ["v*-swag.*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to build (e.g. v1.12.30-swag.1)
+        required: true
+      ec_tag:
+        description: Element Call swag tag to embed
+        required: true
+        default: v0.26.1-swag.1
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      SWAG_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      SWAG_EC_TAG: ${{ github.event.inputs.ec_tag || 'v0.26.1-swag.1' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch our Element Call build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: SWAG_EC_DIR="$PWD/.swag-ec" scripts/swag-fetch-embedded-ec.sh "$SWAG_EC_TAG"
+      - name: Build and package
+        env:
+          SWAG_EC_DIR: ${{ github.workspace }}/.swag-ec
+        run: cd apps/web && DIST_VERSION="$SWAG_TAG" scripts/package.sh
+      - name: Assert our Element Call is embedded
+        run: grep -rlq "$SWAG_EC_TAG" apps/web/webapp/widgets/element-call/ && echo "our EC embedded"
+      - name: Assert the version marker
+        run: test "$(cat apps/web/webapp/version)" = "$SWAG_TAG" && echo "version marker ok"
+      - name: Checksum
+        run: cd apps/web/dist && sha256sum element-*.tar.gz > "element-$SWAG_TAG.tar.gz.sha256"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.SWAG_TAG }}
+          files: |
+            apps/web/dist/element-*.tar.gz
+            apps/web/dist/element-*.sha256

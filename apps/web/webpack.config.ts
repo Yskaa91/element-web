@@ -105,6 +105,9 @@ export default (env: string, argv: Record<string, any>): webpack.Configuration =
     // directory, so we don't have to rely on an index.js or similar file existing.
     const jsSdkSrcDir = path.join(getPackageRoot("matrix-js-sdk"), "src");
 
+    // Swag: allow embedding our own Element Call build instead of the npm package.
+    const swagEcDir = process.env.SWAG_EC_DIR; // absolute path to our EC build, or undefined
+
     return {
         ...development,
 
@@ -664,7 +667,7 @@ export default (env: string, argv: Record<string, any>): webpack.Configuration =
                     // Element Call embedded widget
                     {
                         from: "**",
-                        context: path.join(getPackageRoot("@element-hq/element-call-embedded"), "dist"),
+                        context: swagEcDir ?? path.join(getPackageRoot("@element-hq/element-call-embedded"), "dist"),
                         to: path.join(__dirname, "webapp", "widgets", "element-call"),
                     },
                     // Mobile guide assets
