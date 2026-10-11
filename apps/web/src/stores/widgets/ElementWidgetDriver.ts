@@ -62,6 +62,7 @@ import { toWidgetDescriptor } from "../../modules/WidgetLifecycleApi";
 import SettingsStore from "../../settings/SettingsStore";
 import { mediaFromMxc } from "../../customisations/Media";
 import SdkConfig from "../../SdkConfig.ts";
+import { soundboardCapabilities } from "../../swag/soundboard/capabilities";
 
 function getRememberedCapabilitiesForWidget(widget: Widget): Capability[] {
     return JSON.parse(localStorage.getItem(`widget_${widget.id}_approved_caps`) || "[]");
@@ -124,6 +125,12 @@ export class ElementWidgetDriver extends WidgetDriver {
             this.allowedCapabilities.add(MatrixCapabilities.MSC4407SendStickyEvent);
             this.allowedCapabilities.add(MatrixCapabilities.MSC4407ReceiveStickyEvent);
             this.allowedCapabilities.add(MatrixCapabilities.MSC4039DownloadFile);
+            // The soundboard lives in the space room, resolved from this
+            // room's m.space.parent; pad audio is uploaded to the media
+            // repository. See apps/web/src/swag/soundboard/capabilities.ts.
+            for (const capability of soundboardCapabilities(MatrixClientPeg.safeGet(), inRoomId)) {
+                this.allowedCapabilities.add(capability);
+            }
 
             this.allowedCapabilities.add(
                 WidgetEventCapability.forStateEvent(EventDirection.Receive, EventType.RoomName).raw,

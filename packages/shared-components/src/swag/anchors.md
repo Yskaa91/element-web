@@ -53,3 +53,32 @@ rationale comment on the element says why the handler is mouse-only.
 
 Conflicts should land in the anchors above and nowhere else. The swag module itself should not
 conflict. If upstream refactors the tile content, the render slot is the single place to fix.
+
+## Anchors added by phase 2 (soundboard capabilities for the call widget)
+
+The soundboard's Element Web half is a capability grant. The call widget reads and writes the board
+in the space room (the state key of the call room's `m.space.parent`) and uploads pad audio to the
+media repository. The capability list is computed in
+`apps/web/src/swag/soundboard/capabilities.ts`; the anchor only asks it for the list, so upstream
+files see a loop rather than five literal strings.
+
+| Upstream file                                             | Anchor                                                                                                                            | Why                                                                                                                                                                                                                    |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/src/stores/widgets/ElementWidgetDriver.ts`      | `import { soundboardCapabilities }` and a loop adding its result to `allowedCapabilities` in the `WidgetType.CALL` + virtual branch | The capability map is static per widget type, so the new capabilities have to be added where the call widget's own ones already are. The space room is resolved at driver construction from `m.space.parent`.             |
+
+`apps/web/src/stores/widgets/ElementWidgetDriver.test.ts` is extended by the same change; it is a
+test, not an anchor.
+
+### The four capabilities, plus the board's send capability
+
+The widget is granted `receive.state_event:m.space.parent`,
+`receive.state_event:io.element.call.soundboard`, `timeline:<spaceRoomId>` and
+`org.matrix.msc4039.upload_file`. It is also granted
+`send.state_event:io.element.call.soundboard`, which the plan's list of four omits but the write path
+requires: `ClientWidgetApi.handleSendEvent` refuses a state send unless a matching
+`send.state_event` capability is allowed, and `save()` writes the board through the widget API.
+Without it the board would be read-only. The two forks request and grant exactly the same strings.
+
+`Symbols.AnyRoom` (`timeline:*`) is deliberately never added: it would grant the widget read access
+to every room the user is in. Only the resolved space room's timeline is added.
+
