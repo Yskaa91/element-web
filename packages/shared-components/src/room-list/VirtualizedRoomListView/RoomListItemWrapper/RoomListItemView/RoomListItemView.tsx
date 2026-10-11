@@ -10,7 +10,7 @@ import classNames from "classnames";
 import { useMergeRefs } from "react-merge-refs";
 
 import { Flex } from "../../../../core/utils/Flex";
-import { type CallParticipant } from "../../../../swag/voice-presence/VoicePresenceRow";
+import { callParticipantsLabel, type CallParticipant } from "../../../../swag/voice-presence/VoicePresenceRow";
 import { type NotificationDecorationData } from "./NotificationDecoration";
 import { RoomListItemContextMenu } from "./RoomListItemContextMenu";
 import { RoomListItemContent } from "./RoomListItemContent";
@@ -26,24 +26,39 @@ import { _t } from "../../../../core/i18n/i18n";
 export type Room = unknown;
 
 /**
- * Generate an accessible label for a room based on its notification state.
+ * Generate an accessible label for a room based on its notification state, plus the people in its
+ * ongoing call.
+ *
+ * The call participants are named here rather than by the row that shows their avatars: the row sits
+ * inside the item's own button, and a button's accessible name replaces the accessible name of
+ * everything inside it, so a label on the row would never be announced.
  */
-function getA11yLabel(roomName: string, notification: NotificationDecorationData): string {
+function getA11yLabel(
+    roomName: string,
+    notification: NotificationDecorationData,
+    callParticipants?: CallParticipant[],
+): string {
+    let label: string;
     if (notification.isUnsentMessage) {
-        return _t("room_list|a11y|unsent_message", { roomName });
+        label = _t("room_list|a11y|unsent_message", { roomName });
     } else if (notification.invited) {
-        return _t("room_list|a11y|invitation", { roomName });
+        label = _t("room_list|a11y|invitation", { roomName });
     } else if (notification.isMention && notification.count) {
-        return _t("room_list|a11y|mention", { roomName, count: notification.count });
+        label = _t("room_list|a11y|mention", { roomName, count: notification.count });
     } else if (notification.hasUnreadCount && notification.count) {
-        return _t("room_list|a11y|unread", { roomName, count: notification.count });
+        label = _t("room_list|a11y|unread", { roomName, count: notification.count });
     } else if (notification.callType === "voice") {
-        return _t("room_list|a11y|voice_call", { roomName });
+        label = _t("room_list|a11y|voice_call", { roomName });
     } else if (notification.callType === "video") {
-        return _t("room_list|a11y|video_call", { roomName });
+        label = _t("room_list|a11y|video_call", { roomName });
     } else {
-        return _t("room_list|a11y|default", { roomName });
+        label = _t("room_list|a11y|default", { roomName });
     }
+
+    // A room without a call keeps exactly the label it had before.
+    if (!callParticipants || callParticipants.length === 0) return label;
+
+    return `${label} ${callParticipantsLabel(callParticipants)}`;
 }
 
 /**
@@ -224,8 +239,8 @@ export const RoomListItemView = memo(function RoomListItemView({
         }
     };
 
-    // Generate a11y label from notification state and room name
-    const a11yLabel = getA11yLabel(item.name, item.notification);
+    // Generate a11y label from notification state, room name and who is in the room's call
+    const a11yLabel = getA11yLabel(item.name, item.notification, item.callParticipants);
 
     return (
         <RoomListItemContextMenu vm={vm}>
