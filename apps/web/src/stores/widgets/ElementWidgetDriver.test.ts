@@ -1015,5 +1015,25 @@ describe("ElementWidgetDriver", () => {
             expect(approvedCapabilities.has("org.matrix.msc2762.timeline:!1:example.org")).toBe(true);
             expect(approvedCapabilities.has("org.matrix.msc2762.timeline:!other:example.org")).toBe(false);
         });
+
+        it("grants the space timeline when the room's state loads after the driver is created", async () => {
+            // The driver is built before the room's state exists, so resolving
+            // the space at construction would find nothing.
+            client.getRoom.mockReturnValue(null);
+            const driver = mkCallDriver();
+
+            stubSpaceParents([spaceParent]);
+
+            const requestedCapabilities = new Set([
+                "org.matrix.msc2762.receive.state_event:m.space.parent",
+                "org.matrix.msc2762.receive.state_event:io.element.call.soundboard",
+                "org.matrix.msc2762.send.state_event:io.element.call.soundboard",
+                "org.matrix.msc4039.upload_file",
+                "org.matrix.msc2762.timeline:!space:example.org",
+            ]);
+
+            const approvedCapabilities = await driver.validateCapabilities(requestedCapabilities);
+            expect(approvedCapabilities.has("org.matrix.msc2762.timeline:!space:example.org")).toBe(true);
+        });
     });
 });

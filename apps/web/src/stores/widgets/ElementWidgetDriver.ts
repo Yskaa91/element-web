@@ -93,7 +93,7 @@ export class ElementWidgetDriver extends WidgetDriver {
     public constructor(
         private forWidget: Widget,
         private forWidgetKind: WidgetKind,
-        virtual: boolean,
+        private readonly virtual: boolean,
         private inRoomId?: string,
     ) {
         super();
@@ -125,12 +125,6 @@ export class ElementWidgetDriver extends WidgetDriver {
             this.allowedCapabilities.add(MatrixCapabilities.MSC4407SendStickyEvent);
             this.allowedCapabilities.add(MatrixCapabilities.MSC4407ReceiveStickyEvent);
             this.allowedCapabilities.add(MatrixCapabilities.MSC4039DownloadFile);
-            // The soundboard lives in the space room, resolved from this
-            // room's m.space.parent; pad audio is uploaded to the media
-            // repository. See apps/web/src/swag/soundboard/capabilities.ts.
-            for (const capability of soundboardCapabilities(MatrixClientPeg.safeGet(), inRoomId)) {
-                this.allowedCapabilities.add(capability);
-            }
 
             this.allowedCapabilities.add(
                 WidgetEventCapability.forStateEvent(EventDirection.Receive, EventType.RoomName).raw,
@@ -246,7 +240,30 @@ export class ElementWidgetDriver extends WidgetDriver {
         }
     }
 
+    /**
+     * Adds the soundboard capabilities for this room's space, if this is a
+     * virtual call widget. Safe to call repeatedly: it recomputes from the
+     * room's current state, so a space that loads late still resolves.
+     */
+    private addSoundboardCapabilities(): void {
+        if (!this.virtual || !WidgetType.CALL.matches(this.forWidget.type) || this.forWidgetKind !== WidgetKind.Room) {
+            return;
+        }
+        for (const capability of soundboardCapabilities(MatrixClientPeg.safeGet(), this.inRoomId)) {
+            this.allowedCapabilities.add(capability);
+        }
+    }
+
     public async validateCapabilities(requested: Set<Capability>): Promise<Set<Capability>> {
+        // The soundboard lives in the space room, resolved from this room's
+        // m.space.parent; pad audio is uploaded to the media repository. See
+        // apps/web/src/swag/soundboard/capabilities.ts. This is recomputed here
+        // rather than at construction because the room's state may not have
+        // loaded when the driver was created (for example a widget restored
+        // before its room), in which case the space timeline would never be
+        // granted and the user would be shown a capability prompt instead.
+        this.addSoundboardCapabilities();
+
         // Check to see if any capabilities aren't automatically accepted (such as sticker pickers
         // allowing stickers to be sent). If there are excess capabilities to be approved, the user
         // will be prompted to accept them.
