@@ -10,6 +10,7 @@ import classNames from "classnames";
 import { useMergeRefs } from "react-merge-refs";
 
 import { Flex } from "../../../../core/utils/Flex";
+import { type CallParticipant } from "../../../../swag/voice-presence/VoicePresenceRow";
 import { type NotificationDecorationData } from "./NotificationDecoration";
 import { RoomListItemContextMenu } from "./RoomListItemContextMenu";
 import { RoomListItemContent } from "./RoomListItemContent";
@@ -73,6 +74,8 @@ export interface RoomListItemViewSnapshot {
     isBold: boolean;
     /** Optional message preview text */
     messagePreview?: string;
+    /** The people in the room's ongoing call, if any */
+    callParticipants?: CallParticipant[];
     /** The MSC4426 user status of the other user in a DM room, if any */
     userStatus?: UserStatus;
     /** Notification decoration data */
@@ -115,6 +118,8 @@ export interface RoomListItemViewSnapshot {
 export interface RoomListItemViewActions {
     /** Called when the room should be opened */
     onOpenRoom: () => void;
+    /** Called when the room's call participants row is clicked */
+    onCallParticipantsClick?: () => void;
     /** Called when the room should be marked as read */
     onMarkAsRead: () => void;
     /** Called when the room should be marked as unread */

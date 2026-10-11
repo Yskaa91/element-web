@@ -422,10 +422,10 @@ describe("RoomListItemViewModel", () => {
             expect(viewModel.getSnapshot().notification.callType).toBe("voice");
         });
 
-        it("should not update the item when there is already an active call and participants join", () => {
+        it("should rebuild the participants row when someone joins an already active call", () => {
             const mockCall = {
                 callType: CallType.Voice,
-                participants: new Map([[mockMember(matrixClient.getUserId()!), new Set<string>()]]),
+                participants: new Map([[mockMember(matrixClient.getUserId()!, "Me"), new Set<string>()]]),
                 off: vi.fn(),
                 on: vi.fn(),
             };
@@ -438,18 +438,16 @@ describe("RoomListItemViewModel", () => {
             const callStateCallback = mockCalls[mockCalls.length - 1][1];
             callStateCallback();
 
-            expect(viewModel.getSnapshot().notification.callType).toBe("voice");
-
-            // Record the snapshot version before the participant event fires
-            const snapshotBefore = viewModel.getSnapshot();
+            expect(viewModel.getSnapshot().callParticipants?.map((participant) => participant.name)).toEqual(["Me"]);
 
             // Simulate another participant joining while the call is already active
-            mockCall.participants.set(mockMember("@other:server"), new Set<string>());
+            mockCall.participants.set(mockMember("@other:server", "Other"), new Set<string>());
             const participantsChangeCallback = mockCall.on.mock.calls[0][1];
             participantsChangeCallback(mockCall.participants);
 
-            // Snapshot should not have changed
-            expect(viewModel.getSnapshot()).toBe(snapshotBefore);
+            const snapshot = viewModel.getSnapshot();
+            expect(snapshot.callParticipants?.map((participant) => participant.name)).toEqual(["Me", "Other"]);
+            expect(snapshot.notification.callType).toBe("voice");
         });
 
         it("should react to participant changes when a call already exists at instantiation time", () => {

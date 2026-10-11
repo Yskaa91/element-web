@@ -8,6 +8,7 @@ Please see LICENSE files in the repository root for full details.
 import {
     BaseViewModel,
     RoomNotifState,
+    type CallParticipant,
     type RoomListItemViewSnapshot,
     type RoomListItemViewActions,
     type Section,
@@ -34,6 +35,7 @@ import { UIComponent } from "../../settings/UIFeature";
 import { CallStore, CallStoreEvent } from "../../stores/CallStore";
 import { clearRoomNotification, setMarkedUnreadState } from "../../utils/notifications";
 import { tagRoom } from "../../utils/room/tagRoom";
+import { mediaFromMxc } from "../../customisations/Media";
 import { keepIfSame } from "../../utils/keepIfSame";
 import dispatcher from "../../dispatcher/dispatcher";
 import { Action } from "../../dispatcher/actions";
@@ -186,14 +188,11 @@ export class RoomListItemViewModel
     };
 
     /**
-     * Handler for call participant changes. Only updates the item if the call moves between having participants and not having participants, to avoid unnecessary updates.
+     * Handler for call participant changes. The participants row shows exactly who is in the call,
+     * so any change to the participant list has to rebuild the item.
      * @param participants The current call participants
      */
     private onCallParticipantsChanged = (participants: Map<RoomMember, Set<string>>): void => {
-        const hasCall = Boolean(this.snapshot.current.notification.callType);
-        // There is already an active call, we don't need to update the item
-        if (hasCall && participants.size > 0) return;
-
         this.updateItem();
     };
 
@@ -377,6 +376,24 @@ export class RoomListItemViewModel
         const callType =
             call?.callType === CallType.Voice ? "voice" : call?.callType === CallType.Video ? "video" : undefined;
 
+        // Voice presence: the avatars of the people in the room's call, so the room list can show
+        // who is in a call without the room being opened.
+        const callParticipants: CallParticipant[] | undefined =
+            call && hasParticipantsInCall
+                ? Array.from(call.participants.keys())
+                      .map((member) => {
+                          const mxcAvatarUrl = member.getMxcAvatarUrl();
+                          return {
+                              userId: member.userId,
+                              name: member.name,
+                              avatarUrl: mxcAvatarUrl
+                                  ? (mediaFromMxc(mxcAvatarUrl, client).srcHttp ?? undefined)
+                                  : undefined,
+                          };
+                      })
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                : undefined;
+
         // Build sections list for the "Move to section" submenu
         const sections: Section[] = RoomListItemViewModel.buildSections(roomTags, availableSections);
         const areSectionsEnabled = SettingsStore.getValue("RoomList.showSections");
@@ -391,6 +408,7 @@ export class RoomListItemViewModel
             name: room.name,
             isBold: notifState.hasAnyNotificationOrActivity,
             messagePreview,
+            callParticipants,
             notification: {
                 hasAnyNotificationOrActivity: notifState.hasAnyNotificationOrActivity || hasParticipantsInCall,
                 isUnsentMessage: notifState.isUnsentMessage,
