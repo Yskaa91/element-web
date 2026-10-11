@@ -11,6 +11,7 @@ import classNames from "classnames";
 
 import { Flex } from "../../../../core/utils/Flex";
 import { useViewModel } from "../../../../core/viewmodel";
+import { VoicePresenceRow } from "../../../../swag/voice-presence/VoicePresenceRow";
 import { NotificationDecoration } from "./NotificationDecoration";
 import { RoomListItemHoverMenu } from "./RoomListItemHoverMenu";
 import { type Room, type RoomListItemViewModel } from "./RoomListItemView";
@@ -68,6 +69,10 @@ export const RoomListItemContent = memo(function RoomListItemContent({
                             {item.messagePreview}
                         </Text>
                     )}
+
+                    {item.callParticipants?.length ? (
+                        <VoicePresenceRow participants={item.callParticipants} onClick={vm.onCallParticipantsClick} />
+                    ) : null}
                 </div>
                 {!isDragging && (item.showMoreOptionsMenu || item.showNotificationMenu) && (
                     <RoomListItemHoverMenu
