@@ -35,7 +35,9 @@ jobs:
         run: pnpm nx run-many -t build -p @element-hq/element-web-module-api @element-hq/element-web-shared-utils @element-hq/web-shared-components
       - name: Unit tests
         run: |
-          pnpm --filter @element-hq/web-shared-components exec vitest run --project unit src/swag src/room-list/VirtualizedRoomListView/RoomListItemWrapper/RoomListItemView
-          pnpm --filter element-web exec vitest run --project unit src/viewmodels/room-list/RoomListItemViewModel.test.ts
+          status=0
+          pnpm --filter @element-hq/web-shared-components exec vitest run --project unit src/swag src/room-list/VirtualizedRoomListView/RoomListItemWrapper/RoomListItemView || status=1
+          pnpm --filter element-web exec vitest run --project unit src/viewmodels/room-list/RoomListItemViewModel.test.ts || status=1
+          exit $status
       - name: Type-check
         run: pnpm nx run-many -t lint:types -p @element-hq/web-shared-components element-web
