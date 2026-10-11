@@ -20,7 +20,11 @@ jobs:
       SWAG_TAG: ${{ github.event.inputs.tag || github.ref_name }}
       SWAG_EC_TAG: ${{ github.event.inputs.ec_tag || 'v0.26.1-swag.1' }}
     steps:
+      # When dispatched with an explicit tag, build that tag's tree, not the
+      # dispatch ref, so the artifact always matches the release tag.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
       - uses: pnpm/action-setup@v4
         with:
           # package.json declares pnpm in devEngines.packageManager, which
@@ -40,7 +44,7 @@ jobs:
           SWAG_EC_DIR: ${{ github.workspace }}/.swag-ec
         run: cd apps/web && DIST_VERSION="$SWAG_TAG" scripts/package.sh
       - name: Assert our Element Call is embedded
-        run: grep -rlq "$SWAG_EC_TAG" apps/web/webapp/widgets/element-call/ && echo "our EC embedded"
+        run: grep -rlqF "$SWAG_EC_TAG" apps/web/webapp/widgets/element-call/ && echo "our EC embedded"
       - name: Assert the version marker
         run: test "$(cat apps/web/webapp/version)" = "$SWAG_TAG" && echo "version marker ok"
       - name: Checksum
