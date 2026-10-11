@@ -57,6 +57,14 @@ vi.mock("../../stores/CallStore", () => ({
     },
 }));
 
+/**
+ * Build a RoomMember-shaped stub for call participants: the view model reads the
+ * display name and avatar of each participant when building the call participants row.
+ */
+function mockMember(userId: string, name = userId, avatarUrl?: string): RoomMember {
+    return { userId, name, getMxcAvatarUrl: () => avatarUrl } as unknown as RoomMember;
+}
+
 describe("RoomListItemViewModel", () => {
     let matrixClient: MatrixClient;
     let room: Room;
@@ -287,7 +295,7 @@ describe("RoomListItemViewModel", () => {
         it("should show voice call indicator", async () => {
             const mockCall = {
                 callType: CallType.Voice,
-                participants: new Map([[matrixClient.getUserId()!, {}]]),
+                participants: new Map([[mockMember(matrixClient.getUserId()!), new Set<string>()]]),
                 off: vi.fn(),
                 on: vi.fn(),
             } as unknown as Call;
@@ -304,7 +312,7 @@ describe("RoomListItemViewModel", () => {
         it("should show video call indicator", async () => {
             const mockCall = {
                 callType: CallType.Video,
-                participants: new Map([[matrixClient.getUserId()!, {}]]),
+                participants: new Map([[mockMember(matrixClient.getUserId()!), new Set<string>()]]),
                 off: vi.fn(),
                 on: vi.fn(),
             } as unknown as Call;
@@ -335,6 +343,58 @@ describe("RoomListItemViewModel", () => {
             expect(viewModel.getSnapshot().notification.callType).toBeUndefined();
         });
 
+        it("should expose the call participants, ordered by display name", async () => {
+            const mockCall = {
+                callType: CallType.Voice,
+                participants: new Map([
+                    [mockMember("@bob:server", "Bob"), new Set<string>()],
+                    [mockMember("@alice:server", "Alice", "mxc://server/avatar"), new Set<string>()],
+                ]),
+                off: vi.fn(),
+                on: vi.fn(),
+            } as unknown as Call;
+
+            vi.spyOn(CallStore.instance, "getCall").mockReturnValue(mockCall);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            await flushPromises();
+
+            const participants = viewModel.getSnapshot().callParticipants;
+            expect(participants?.map((participant) => participant.name)).toEqual(["Alice", "Bob"]);
+            expect(participants?.[0]).toEqual({
+                userId: "@alice:server",
+                name: "Alice",
+                avatarUrl: "http://this.is.a.url/server/avatar",
+            });
+            expect(participants?.[1].avatarUrl).toBeUndefined();
+        });
+
+        it("should not expose call participants when there is no call", async () => {
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            await flushPromises();
+
+            expect(viewModel.getSnapshot().callParticipants).toBeUndefined();
+        });
+
+        it("should not expose call participants when the call is empty", async () => {
+            const mockCall = {
+                callType: CallType.Voice,
+                participants: new Map(),
+                off: vi.fn(),
+                on: vi.fn(),
+            } as unknown as Call;
+
+            vi.spyOn(CallStore.instance, "getCall").mockReturnValue(mockCall);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            await flushPromises();
+
+            expect(viewModel.getSnapshot().callParticipants).toBeUndefined();
+        });
+
         it("should listen to call participant changes", () => {
             const mockCall = {
                 callType: CallType.Voice,
@@ -353,7 +413,7 @@ describe("RoomListItemViewModel", () => {
             callStateCallback();
 
             // Simulate participant joining
-            mockCall.participants.set(matrixClient.getUserId()! as unknown as RoomMember, new Set());
+            mockCall.participants.set(mockMember(matrixClient.getUserId()!), new Set());
 
             // Get the callback registered for participant changes
             const participantsChangeCallback = mockCall.on.mock.calls[0][1];
@@ -365,7 +425,7 @@ describe("RoomListItemViewModel", () => {
         it("should not update the item when there is already an active call and participants join", () => {
             const mockCall = {
                 callType: CallType.Voice,
-                participants: new Map([[matrixClient.getUserId()! as unknown as RoomMember, new Set<string>()]]),
+                participants: new Map([[mockMember(matrixClient.getUserId()!), new Set<string>()]]),
                 off: vi.fn(),
                 on: vi.fn(),
             };
@@ -384,7 +444,7 @@ describe("RoomListItemViewModel", () => {
             const snapshotBefore = viewModel.getSnapshot();
 
             // Simulate another participant joining while the call is already active
-            mockCall.participants.set("@other:server" as unknown as RoomMember, new Set<string>());
+            mockCall.participants.set(mockMember("@other:server"), new Set<string>());
             const participantsChangeCallback = mockCall.on.mock.calls[0][1];
             participantsChangeCallback(mockCall.participants);
 
@@ -405,7 +465,7 @@ describe("RoomListItemViewModel", () => {
             expect(viewModel.getSnapshot().notification.callType).toBeUndefined();
 
             // Simulate participant joining
-            mockCall.participants.set(matrixClient.getUserId()! as unknown as RoomMember, new Set());
+            mockCall.participants.set(mockMember(matrixClient.getUserId()!), new Set());
 
             // Get the callback registered for participant changes
             const participantsChangeCallback = mockCall.on.mock.calls[0][1];
@@ -417,13 +477,13 @@ describe("RoomListItemViewModel", () => {
         it("should unsubscribe from old call participants when the call changes", () => {
             const firstCall = {
                 callType: CallType.Voice,
-                participants: new Map([[matrixClient.getUserId()! as unknown as RoomMember, new Set<string>()]]),
+                participants: new Map([[mockMember(matrixClient.getUserId()!), new Set<string>()]]),
                 off: vi.fn(),
                 on: vi.fn(),
             };
             const secondCall = {
                 callType: CallType.Video,
-                participants: new Map([[matrixClient.getUserId()! as unknown as RoomMember, new Set<string>()]]),
+                participants: new Map([[mockMember(matrixClient.getUserId()!), new Set<string>()]]),
                 off: vi.fn(),
                 on: vi.fn(),
             };
