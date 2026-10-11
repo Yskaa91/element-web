@@ -89,11 +89,7 @@ export const VoicePresenceRow: React.FC<VoicePresenceRowProps> = ({ participants
                     aria-hidden={true}
                 />
             ))}
-            {overflow > 0 && (
-                <span className={styles.overflow} aria-hidden={true}>
-                    +{overflow}
-                </span>
-            )}
+            {overflow > 0 && <span className={styles.overflow} aria-hidden={true}>+{overflow}</span>}
         </span>
     );
 };
