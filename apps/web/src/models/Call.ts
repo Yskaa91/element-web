@@ -46,6 +46,8 @@ import SdkConfig from "../SdkConfig.ts";
 import DMRoomMap from "../utils/DMRoomMap.ts";
 import { type WidgetMessaging, WidgetMessagingEvent } from "../stores/widgets/WidgetMessaging.ts";
 import { BugReportEndpointURLLocal } from "../IConfigOptions.ts";
+import { SPEAKING_ACTION, applySpeakingAction } from "../swag/speaking/speaking";
+import { SpeakingStore } from "../swag/speaking/SpeakingStore";
 
 const TIMEOUT_MS = 16000;
 const logger = rootLogger.getChild("models/Call");
@@ -916,6 +918,7 @@ export class ElementCall extends Call {
         widgetApi.on(`action:${ElementWidgetActions.HangupCall}`, this.onHangup);
         widgetApi.on(`action:${ElementWidgetActions.Close}`, this.onClose);
         widgetApi.on(`action:${ElementWidgetActions.DeviceMute}`, this.onDeviceMute);
+        widgetApi.on(`action:${SPEAKING_ACTION}`, this.onSpeaking);
         return widgetApi;
     }
 
@@ -942,12 +945,15 @@ export class ElementCall extends Call {
         this.widgetApi!.off(`action:${ElementWidgetActions.HangupCall}`, this.onHangup);
         this.widgetApi!.off(`action:${ElementWidgetActions.Close}`, this.onClose);
         this.widgetApi!.off(`action:${ElementWidgetActions.DeviceMute}`, this.onDeviceMute);
+        this.widgetApi!.off(`action:${SPEAKING_ACTION}`, this.onSpeaking);
+        SpeakingStore.instance.clear(this.roomId);
         super.close();
     }
 
     public destroy(): void {
         ActiveWidgetStore.instance.destroyPersistentWidget(this.widget.id, this.widget.roomId);
         WidgetStore.instance.removeVirtualWidget(this.widget.id, this.widget.roomId);
+        SpeakingStore.instance.clear(this.roomId);
         this.session.off(MatrixRTCSessionEvent.MembershipsChanged, this.onMembershipChanged);
         this.client.matrixRTC.off(MatrixRTCSessionManagerEvents.SessionEnded, this.checkDestroy);
 
@@ -992,6 +998,13 @@ export class ElementCall extends Call {
         this.widgetApi!.transport.reply(ev.detail, {}); // ack
     };
 
+    // swag anchor: speaking ring
+    private readonly onSpeaking = (ev: CustomEvent<IWidgetApiRequest>): void => {
+        ev.preventDefault();
+        applySpeakingAction(ev.detail.data, SpeakingStore.instance, this.roomId);
+        this.widgetApi!.transport.reply(ev.detail, {}); // ack
+    };
+
     private readonly onJoin = (ev: CustomEvent<IWidgetApiRequest>): void => {
         ev.preventDefault();
         this.widgetApi!.transport.reply(ev.detail, {}); // ack
@@ -1005,6 +1018,7 @@ export class ElementCall extends Call {
 
         ev.preventDefault();
         this.widgetApi!.transport.reply(ev.detail, {}); // ack
+        SpeakingStore.instance.clear(this.roomId);
         this.setDisconnected();
     };
 
