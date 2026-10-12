@@ -1,0 +1,67 @@
+/*
+Copyright 2026 Element Creations Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE in the repository root for full details.
+*/
+
+/*
+ * Swag theme: a FlutterFlow-like dark look with a light cyan accent instead
+ * of Element's green one.
+ *
+ * This file is imported unlayered into the main bundle (see the anchor in
+ * `apps/web/src/vector/index.ts`), while every theme ships its tokens inside
+ * cascade layers. Unlayered author styles beat layered ones at any
+ * specificity, so these values win regardless of load order — and the
+ * `body.cpd-theme-dark` scope keeps the light theme and the high-contrast
+ * themes exactly as they were.
+ *
+ * Only semantic accent roles are remapped, never the palettes: green stays
+ * green wherever it means success or online. The cyan twins sit at the same
+ * scale positions, so every contrast relationship the design system built
+ * holds. Primary buttons move from a near-white fill to cyan with the stock
+ * near-white text (`cyan-800` keeps white text above 4.5:1; the hovered and
+ * pressed steps go darker, mirroring the stock ramp).
+ */
+
+body.cpd-theme-dark {
+    /* A touch deeper than the stock canvas, towards the reference. Every
+       token built on the theme background follows automatically. */
+    --cpd-color-theme-bg: #0d0e14;
+
+    /* Accent text, links, badges and icons (this also recolors every legacy
+       `$accent` usage, which compiles to `text-action-accent`). */
+    --cpd-color-text-action-accent: var(--cpd-color-cyan-900);
+    --cpd-color-text-badge-accent: var(--cpd-color-cyan-1100);
+    --cpd-color-icon-accent-tertiary: var(--cpd-color-cyan-800);
+    --cpd-color-icon-accent-primary: var(--cpd-color-cyan-900);
+
+    /* Accent surfaces: toggles, selected pills, badges. */
+    --cpd-color-bg-accent-rest: var(--cpd-color-cyan-900);
+    --cpd-color-bg-accent-hovered: var(--cpd-color-cyan-1000);
+    --cpd-color-bg-accent-pressed: var(--cpd-color-cyan-1100);
+    --cpd-color-bg-accent-selected: var(--cpd-color-alpha-cyan-300);
+    --cpd-color-bg-badge-accent: var(--cpd-color-cyan-400);
+
+    /* Accent borders. */
+    --cpd-color-border-accent-subtle: var(--cpd-color-cyan-700);
+    --cpd-color-border-accent-primary: var(--cpd-color-cyan-900);
+
+    /* Primary buttons: cyan fill, stock near-white text. */
+    --cpd-color-bg-action-primary-rest: var(--cpd-color-cyan-800);
+    --cpd-color-bg-action-primary-hovered: var(--cpd-color-cyan-700);
+    --cpd-color-bg-action-primary-pressed: var(--cpd-color-cyan-500);
+
+    /* The action gradient some components fill with. */
+    --cpd-color-gradient-action-stop1: var(--cpd-color-cyan-1100);
+    --cpd-color-gradient-action-stop2: var(--cpd-color-cyan-900);
+    --cpd-color-gradient-action-stop3: var(--cpd-color-cyan-700);
+    --cpd-color-gradient-action-stop4: var(--cpd-color-cyan-500);
+    --cpd-color-gradient-action-linear: linear-gradient(
+        180deg,
+        var(--cpd-color-gradient-action-stop1) 0%,
+        var(--cpd-color-gradient-action-stop2) 33%,
+        var(--cpd-color-gradient-action-stop3) 66%,
+        var(--cpd-color-gradient-action-stop4) 100%
+    );
+}

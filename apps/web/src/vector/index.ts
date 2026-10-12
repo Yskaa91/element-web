@@ -19,6 +19,10 @@ import "./modernizr.cjs";
 import { polyfillTouchEvent } from "../@types/polyfill";
 
 import "../../res/css/_index.pcss";
+// swag anchor: the household theme override (dark card look, cyan accent).
+// It is plain unlayered CSS, so it wins over the layered theme bundles
+// regardless of load order; see apps/web/src/swag/theme/swag-theme.css.
+import "../swag/theme/swag-theme.css";
 // Require common CSS here; this will make webpack process it into bundle.css.
 // Our own CSS (which is themed) is imported via separate webpack entry points
 // in webpack.config.js
