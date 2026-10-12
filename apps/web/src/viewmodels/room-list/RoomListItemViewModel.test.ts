@@ -32,6 +32,7 @@ import dispatcher from "../../dispatcher/dispatcher";
 import { Action } from "../../dispatcher/actions";
 import { CallStore } from "../../stores/CallStore";
 import { CallEvent, type Call } from "../../models/Call";
+import { SpeakingStore, SpeakingStoreEvent } from "../../swag/speaking/SpeakingStore";
 import { RoomListItemViewModel } from "./RoomListItemViewModel";
 import RoomListStoreV3 from "../../stores/room-list-v3/RoomListStoreV3";
 import * as tagRoomModule from "../../utils/room/tagRoom";
@@ -104,6 +105,10 @@ describe("RoomListItemViewModel", () => {
 
     afterEach(() => {
         viewModel?.dispose();
+        // The speaking store is a real singleton: clear what the test set up so no state
+        // leaks into the next one.
+        SpeakingStore.instance.clear(room.roomId);
+        SpeakingStore.instance.clear("!other:server");
         vi.restoreAllMocks();
     });
 
@@ -366,6 +371,7 @@ describe("RoomListItemViewModel", () => {
                 userId: "@alice:server",
                 name: "Alice",
                 avatarUrl: "http://this.is.a.url/server/avatar",
+                speaking: false,
             });
             expect(participants?.[1].avatarUrl).toBeUndefined();
         });
@@ -527,6 +533,76 @@ describe("RoomListItemViewModel", () => {
             callType = CallType.Video;
             mockCall.emit(CallEvent.CallTypeChanged, callType);
             expect(viewModel.getSnapshot().notification.callType).toBe("video");
+        });
+    });
+
+    describe("Speaking ring", () => {
+        function callWithAliceAndBob(): Call {
+            return {
+                callType: CallType.Voice,
+                participants: new Map([
+                    [mockMember("@alice:server", "Alice"), new Set<string>()],
+                    [mockMember("@bob:server", "Bob"), new Set<string>()],
+                ]),
+                off: vi.fn(),
+                on: vi.fn(),
+            } as unknown as Call;
+        }
+
+        it("should mark the speaking participants and leave the others false", async () => {
+            vi.spyOn(CallStore.instance, "getCall").mockReturnValue(callWithAliceAndBob());
+            SpeakingStore.instance.setSpeaking(room.roomId, ["@alice:server"], 1);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+            await flushPromises();
+
+            const participants = viewModel.getSnapshot().callParticipants;
+            expect(participants?.find((participant) => participant.userId === "@alice:server")?.speaking).toBe(true);
+            expect(participants?.find((participant) => participant.userId === "@bob:server")?.speaking).toBe(false);
+        });
+
+        it("should rebuild the item when someone starts speaking", async () => {
+            vi.spyOn(CallStore.instance, "getCall").mockReturnValue(callWithAliceAndBob());
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+            await flushPromises();
+            expect(viewModel.getSnapshot().callParticipants?.every((participant) => !participant.speaking)).toBe(true);
+
+            SpeakingStore.instance.setSpeaking(room.roomId, ["@bob:server"], 2);
+
+            const participants = viewModel.getSnapshot().callParticipants;
+            expect(participants?.find((participant) => participant.userId === "@alice:server")?.speaking).toBe(false);
+            expect(participants?.find((participant) => participant.userId === "@bob:server")?.speaking).toBe(true);
+        });
+
+        it("should leave the item untouched when the speaking store updates another room", async () => {
+            vi.spyOn(CallStore.instance, "getCall").mockReturnValue(callWithAliceAndBob());
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+            await flushPromises();
+            const before = viewModel.getSnapshot().callParticipants;
+
+            SpeakingStore.instance.setSpeaking("!other:server", ["@alice:server"], 1);
+
+            // Untouched means untouched: the same participants array, not a rebuild with equal values.
+            expect(viewModel.getSnapshot().callParticipants).toBe(before);
+            expect(before?.find((participant) => participant.userId === "@alice:server")?.speaking).toBe(false);
+        });
+
+        it("should stop listening to the speaking store on dispose", async () => {
+            const listenersBefore = SpeakingStore.instance.listenerCount(SpeakingStoreEvent.Update);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+            await flushPromises();
+            expect(SpeakingStore.instance.listenerCount(SpeakingStoreEvent.Update)).toBe(listenersBefore + 1);
+
+            viewModel.dispose();
+            expect(SpeakingStore.instance.listenerCount(SpeakingStoreEvent.Update)).toBe(listenersBefore);
+
+            // No update reaches the disposed view model: the item keeps its participants.
+            const before = viewModel.getSnapshot().callParticipants;
+            SpeakingStore.instance.setSpeaking(room.roomId, ["@alice:server"], 1);
+            expect(viewModel.getSnapshot().callParticipants).toBe(before);
         });
     });
 

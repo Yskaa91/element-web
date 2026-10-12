@@ -10,6 +10,7 @@ import { render, screen } from "@test-utils";
 import { describe, it, expect, vi } from "vitest";
 
 import { VoicePresenceRow, type CallParticipant } from "./VoicePresenceRow";
+import styles from "./VoicePresenceRow.module.css";
 
 function participant(name: string, avatarUrl?: string): CallParticipant {
     return { userId: `@${name.toLowerCase()}:server`, name, avatarUrl };
@@ -86,5 +87,47 @@ describe("<VoicePresenceRow />", () => {
         screen.getByTitle("In call: Alice").click();
 
         expect(onAncestorClick).not.toHaveBeenCalled();
+    });
+
+    it("draws the speaking ring only on speaking participants", () => {
+        const { container } = render(
+            <VoicePresenceRow
+                participants={[
+                    { ...participant("Alice"), speaking: true },
+                    { ...participant("Bob"), speaking: false },
+                    participant("Carol"),
+                ]}
+            />,
+        );
+
+        const avatars = container.querySelectorAll('[role="img"]');
+        expect(avatars).toHaveLength(3);
+        expect(avatars[0].classList.contains(styles.speaking)).toBe(true);
+        // Neither `false` nor `undefined` draws the ring.
+        expect(avatars[1].classList.contains(styles.speaking)).toBe(false);
+        expect(avatars[2].classList.contains(styles.speaking)).toBe(false);
+    });
+
+    it("draws the speaking ring on the initials fallback when the speaker has no avatar", () => {
+        const { container } = render(<VoicePresenceRow participants={[{ ...participant("Alice"), speaking: true }]} />);
+
+        const avatar = container.querySelector('[role="img"]')!;
+        expect(avatar.classList.contains(styles.speaking)).toBe(true);
+        // The ring must be on the element that shows the initials fallback, not on an image wrapper.
+        expect(avatar.textContent).toBe("A");
+    });
+
+    it("the speaking ring adds nothing to the row's label", () => {
+        const { container } = render(
+            <VoicePresenceRow participants={[{ ...participant("Alice"), speaking: true }, participant("Bob")]} />,
+        );
+
+        // Exactly what phase 1 produced: the tooltip names the call members, the row stays out of
+        // the accessibility tree and has no label of its own, so the decorative ring cannot be
+        // announced by assistive tech.
+        expect(screen.getByTitle("In call: Alice, Bob")).toBeTruthy();
+        const row = container.firstElementChild!;
+        expect(row.getAttribute("aria-hidden")).toBe("true");
+        expect(row.getAttribute("aria-label")).toBeNull();
     });
 });
