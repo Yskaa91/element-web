@@ -209,7 +209,7 @@ export class RoomListItemViewModel
      * room leaves it untouched.
      * @param roomId The room whose speaking state changed
      */
-    private onSpeakingChanged = (roomId: string): void => {
+    private onSpeakingChanged = (roomId: unknown): void => {
         if (roomId !== this.props.room.roomId) return;
         this.updateItem();
     };
