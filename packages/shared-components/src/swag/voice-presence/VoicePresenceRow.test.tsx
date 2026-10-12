@@ -25,7 +25,7 @@ describe("<VoicePresenceRow />", () => {
         expect(container.querySelectorAll('[role="img"]')).toHaveLength(3);
     });
 
-    it("shows at most three avatars and collapses the rest into a +N chip", () => {
+    it("renders an avatar for every participant, with no overflow chip", () => {
         const participants = [
             participant("Alice"),
             participant("Bob"),
@@ -35,9 +35,9 @@ describe("<VoicePresenceRow />", () => {
         ];
         const { container } = render(<VoicePresenceRow participants={participants} />);
 
-        expect(container.querySelectorAll('[role="img"]')).toHaveLength(3);
-        // The item's own label summarises the people behind the chip, so it is decorative.
-        expect(screen.getByText("+2").getAttribute("aria-hidden")).toBe("true");
+        expect(container.querySelectorAll('[role="img"]')).toHaveLength(5);
+        // Everyone is shown, so there is nothing to collapse: no chip.
+        expect(screen.queryByText(/^\+\d+$/)).toBeNull();
     });
 
     it("renders nothing when there is nobody in the call", () => {

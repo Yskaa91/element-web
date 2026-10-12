@@ -43,24 +43,21 @@ export interface VoicePresenceRowProps {
     participants: CallParticipant[];
     /** Called when the row is clicked. */
     onClick?: () => void;
-    /** The number of avatars to show before the rest are collapsed into a `+N` chip. */
-    max?: number;
 }
 
 /**
  * Shows the avatars of the people in a room's ongoing call, so the room list can
  * say who is in a call without the room being opened. Renders nothing when the
- * call is empty.
+ * call is empty. Every participant gets an avatar; the row wraps onto further
+ * lines when they do not fit side by side.
  *
  * The row is decorative for the accessible name: it is hidden from the
  * accessibility tree and the room list item announces who is in the call (see
  * `getA11yLabel`), so the names are not duplicated.
  */
-export const VoicePresenceRow: React.FC<VoicePresenceRowProps> = ({ participants, onClick, max = 3 }) => {
+export const VoicePresenceRow: React.FC<VoicePresenceRowProps> = ({ participants, onClick }) => {
     if (participants.length === 0) return null;
 
-    const shown = participants.slice(0, max);
-    const overflow = participants.length - shown.length;
     const label = callParticipantsLabel(participants);
 
     return (
@@ -80,18 +77,17 @@ export const VoicePresenceRow: React.FC<VoicePresenceRowProps> = ({ participants
                 onClick?.();
             }}
         >
-            {shown.map((participant) => (
+            {participants.map((participant) => (
                 <Avatar
                     key={participant.userId}
                     className={participant.speaking ? `${styles.avatar} ${styles.speaking}` : styles.avatar}
                     id={participant.userId}
                     name={participant.name}
                     src={participant.avatarUrl}
-                    size="20px"
+                    size="30px"
                     aria-hidden={true}
                 />
             ))}
-            {overflow > 0 && <span className={styles.overflow} aria-hidden={true}>+{overflow}</span>}
         </span>
     );
 };
