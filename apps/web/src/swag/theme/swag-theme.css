@@ -91,11 +91,13 @@ body.cpd-theme-dark .mx_Dialog_wrapper {
     );
 }
 
-/* The login page is full-bleed, so it carries the aura directly. */
+/* The login page is full-bleed, so it carries the aura directly. The
+   `!important` is load-bearing: the branding code paints the stock photo
+   with an inline `background` style, which beats any normal rule. */
 body.cpd-theme-dark .mx_AuthPage {
     background-image: radial-gradient(
         ellipse 70% 50% at 50% 0%,
         rgb(103 232 249 / 10%),
         transparent 70%
-    );
+    ) !important;
 }

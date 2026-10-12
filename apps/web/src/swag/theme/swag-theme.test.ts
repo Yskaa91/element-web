@@ -40,6 +40,9 @@ describe("swag theme override", () => {
         // Sheen only: the theme's own surface colors must show through, so
         // the override sets background-image, never background.
         expect(css).not.toMatch(/^\s*background:/m);
+        // The login aura carries !important: the branding code paints the
+        // stock photo through an inline style, which beats any normal rule.
+        expect(css).toMatch(/\.mx_AuthPage[\s\S]*!important/);
     });
 
     it("remaps the accent roles to the cyan scale, never the green palette", () => {
