@@ -44,6 +44,7 @@ import SdkConfig from "../SdkConfig.ts";
 import DMRoomMap from "../utils/DMRoomMap.ts";
 import { WidgetMessagingEvent, type WidgetMessaging } from "../stores/widgets/WidgetMessaging.ts";
 import { BugReportEndpointURLLocal } from "../IConfigOptions.ts";
+import { SpeakingStore } from "../swag/speaking/SpeakingStore";
 
 const { enabledSettings } = enableCalls();
 
@@ -952,6 +953,41 @@ describe("ElementCall", () => {
             widgetApi.emit(`action:${ElementWidgetActions.DeviceMute}`, mockEv);
             expect(widgetApi.transport.reply).toHaveBeenCalledWith({ video_enabled: false }, {});
             expect(preventDefault).toHaveBeenCalled();
+        });
+
+        it("registers and unregisters the speaking widget action handler", async () => {
+            const action = "action:io.element.call.speaking";
+            expect(widgetApi.listenerCount(action)).toBe(0);
+            await call.start({});
+            expect(widgetApi.listenerCount(action)).toBe(1);
+            call.close();
+            expect(widgetApi.listenerCount(action)).toBe(0);
+        });
+
+        it("acknowledges the speaking widget action and applies it to the store", async () => {
+            await connect(call, widgetApi);
+            const preventDefault = vi.fn();
+            const mockEv = {
+                preventDefault,
+                detail: { data: { roomId: room.roomId, userIds: [alice.userId], ts: 1 } },
+            };
+            widgetApi.emit("action:io.element.call.speaking", mockEv);
+            expect(preventDefault).toHaveBeenCalled();
+            expect(widgetApi.transport.reply).toHaveBeenCalledWith(mockEv.detail, {});
+            expect(SpeakingStore.instance.getSpeakingUserIds(room.roomId)).toEqual([alice.userId]);
+            SpeakingStore.instance.clear(room.roomId);
+        });
+
+        it("clears the speaking store when the call ends", async () => {
+            await connect(call, widgetApi);
+
+            SpeakingStore.instance.setSpeaking(room.roomId, [alice.userId], 1);
+            widgetApi.emit(`action:${ElementWidgetActions.HangupCall}`, new CustomEvent("widgetapirequest", {}));
+            expect(SpeakingStore.instance.getSpeakingUserIds(room.roomId)).toEqual([]);
+
+            SpeakingStore.instance.setSpeaking(room.roomId, [alice.userId], 1);
+            widgetApi.emit(`action:${ElementWidgetActions.Close}`, new CustomEvent("widgetapirequest", {}));
+            expect(SpeakingStore.instance.getSpeakingUserIds(room.roomId)).toEqual([]);
         });
 
         it("emits events when connection state changes", async () => {

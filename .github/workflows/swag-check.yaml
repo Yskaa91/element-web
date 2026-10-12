@@ -38,7 +38,7 @@ jobs:
           status=0
           pnpm --filter @element-hq/web-shared-components exec vitest run --project unit src/swag src/room-list/VirtualizedRoomListView/RoomListItemWrapper/RoomListItemView || status=1
           pnpm --filter element-web exec vitest run --project unit src/viewmodels/room-list/RoomListItemViewModel.test.ts || status=1
-          pnpm --filter element-web exec vitest run --project unit src/swag src/stores/widgets/ElementWidgetDriver.test.ts || status=1
+          pnpm --filter element-web exec vitest run --project unit src/swag src/stores/widgets/ElementWidgetDriver.test.ts src/models/Call.test.ts || status=1
           exit $status
       - name: Type-check
         run: pnpm nx run-many -t lint:types -p @element-hq/web-shared-components element-web
