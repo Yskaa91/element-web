@@ -31,6 +31,17 @@ describe("swag theme override", () => {
         expect(css).not.toContain("-hc");
     });
 
+    it("gives floating surfaces the card treatment and the login page an aura", () => {
+        expect(css).toContain('[role="dialog"]');
+        expect(css).toContain('[role="menu"]');
+        expect(css).toContain(".mx_Dialog_wrapper");
+        expect(css).toContain(".mx_AuthPage");
+        expect(css).toContain("radial-gradient");
+        // Sheen only: the theme's own surface colors must show through, so
+        // the override sets background-image, never background.
+        expect(css).not.toMatch(/^\s*background:/m);
+    });
+
     it("remaps the accent roles to the cyan scale, never the green palette", () => {
         for (const token of [
             "--cpd-color-text-action-accent",

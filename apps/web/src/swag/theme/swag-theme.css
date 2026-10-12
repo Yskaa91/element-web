@@ -65,3 +65,37 @@ body.cpd-theme-dark {
         var(--cpd-color-gradient-action-stop4) 100%
     );
 }
+
+/*
+ * Floating surfaces get the reference treatment: a faint top sheen over
+ * whatever background the theme gives them, plus a hairline border. Only
+ * `background-image` is set, never `background`, so the theme's own surface
+ * color always shows through untouched.
+ */
+body.cpd-theme-dark [role="dialog"],
+body.cpd-theme-dark [role="menu"] {
+    background-image: linear-gradient(rgb(255 255 255 / 5%), transparent 40%);
+    border: 1px solid rgb(255 255 255 / 10%);
+}
+
+/*
+ * Ambient glow behind everything floating: the dialog wrapper is a
+ * full-screen layer, so a faint cyan aura there reads as atmosphere without
+ * touching the app's own surfaces or readability.
+ */
+body.cpd-theme-dark .mx_Dialog_wrapper {
+    background-image: radial-gradient(
+        ellipse 60% 45% at 50% 30%,
+        rgb(103 232 249 / 7%),
+        transparent 70%
+    );
+}
+
+/* The login page is full-bleed, so it carries the aura directly. */
+body.cpd-theme-dark .mx_AuthPage {
+    background-image: radial-gradient(
+        ellipse 70% 50% at 50% 0%,
+        rgb(103 232 249 / 10%),
+        transparent 70%
+    );
+}
