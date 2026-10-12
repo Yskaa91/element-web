@@ -24,6 +24,19 @@ Please see LICENSE in the repository root for full details.
     box-shadow: 0 0 0 2px var(--cpd-color-bg-canvas-default);
 }
 
+/* The speaking ring: marks whoever is currently talking, on the avatar image or on
+   the initials fallback. Decorative: the row's label names the people in the call,
+   never who is speaking, so the ring is never announced. */
+.speaking {
+    outline: 2px solid var(--cpd-color-border-success-subtle);
+    outline-offset: 1px;
+    border-radius: 50%;
+    /* The avatars overlap to stay compact, and later avatars paint over earlier ones.
+       Lift the speaking avatar so the overlap does not clip its ring. */
+    position: relative;
+    z-index: 1;
+}
+
 .overflow {
     display: inline-flex;
     align-items: center;

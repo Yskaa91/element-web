@@ -20,6 +20,8 @@ export interface CallParticipant {
     name: string;
     /** The HTTP URL of the participant's avatar, if they have one. */
     avatarUrl?: string;
+    /** Whether the participant is currently speaking, to show the speaking ring. */
+    speaking?: boolean;
 }
 
 /**
@@ -81,7 +83,7 @@ export const VoicePresenceRow: React.FC<VoicePresenceRowProps> = ({ participants
             {shown.map((participant) => (
                 <Avatar
                     key={participant.userId}
-                    className={styles.avatar}
+                    className={participant.speaking ? `${styles.avatar} ${styles.speaking}` : styles.avatar}
                     id={participant.userId}
                     name={participant.name}
                     src={participant.avatarUrl}

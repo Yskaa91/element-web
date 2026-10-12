@@ -82,3 +82,22 @@ Without it the board would be read-only. The two forks request and grant exactly
 `Symbols.AnyRoom` (`timeline:*`) is deliberately never added: it would grant the widget read access
 to every room the user is in. Only the resolved space room's timeline is added.
 
+## Anchors added by phase 3 (speaking ring)
+
+The ring itself lives entirely in the swag module: `CallParticipant` gains `speaking?: boolean` and
+`VoicePresenceRow` adds the `.speaking` class (a green `outline` around the avatar, on the image or
+on the initials fallback) to whoever is speaking. No upstream file sees either, so the row entry in
+the phase 1 table above is unchanged. The only anchors are in the view model, which reads the
+speaking state and puts it on the participants the phase 1 mapping already builds.
+
+| Upstream file                                                                       | Anchor                                                                                              | Why                                                                                                                                                                                          |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/src/viewmodels/room-list/RoomListItemViewModel.ts` (constructor)           | `this.disposables.trackListener(SpeakingStore.instance, SpeakingStoreEvent.Update, this.onSpeakingChanged)` | Subscribes to the speaking store next to the `CallStore` subscription and re-emits through the existing `updateItem()` path. The handler ignores updates for other rooms, so their items are left untouched. |
+| `apps/web/src/viewmodels/room-list/RoomListItemViewModel.ts` (`generateItemSync`)    | `speaking: speakingUserIds.includes(member.userId)` on each mapped participant                       | The participant mapping is where the tile item is built, so the speaking flag rides along on the field the phase 1 anchor already added.                                                       |
+
+The ring is decorative. It adds no element and no label: the row stays `aria-hidden` with its
+`title` tooltip and the item announces the names through `getA11yLabel`, exactly as phase 1
+produced. The speaking state comes from `SpeakingStore`, which only ever holds data for the call
+the user is in, and the row only renders when the tile has call participants, so the ring can never
+appear for a room whose call the user is not in.
+

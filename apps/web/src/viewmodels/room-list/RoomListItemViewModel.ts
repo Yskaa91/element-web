@@ -33,6 +33,7 @@ import { RoomNotifState as ElementRoomNotifState } from "../../RoomNotifs";
 import { shouldShowComponent } from "../../customisations/helpers/UIComponents";
 import { UIComponent } from "../../settings/UIFeature";
 import { CallStore, CallStoreEvent } from "../../stores/CallStore";
+import { SpeakingStore, SpeakingStoreEvent } from "../../swag/speaking/SpeakingStore";
 import { clearRoomNotification, setMarkedUnreadState } from "../../utils/notifications";
 import { tagRoom } from "../../utils/room/tagRoom";
 import { placeCall } from "../../utils/room/placeCall";
@@ -136,6 +137,9 @@ export class RoomListItemViewModel
         // If there is an active call for this room, listen to participant changes
         this.listenToCallParticipants();
 
+        // Subscribe to speaking state changes for the ring on the participants row
+        this.disposables.trackListener(SpeakingStore.instance, SpeakingStoreEvent.Update, this.onSpeakingChanged);
+
         // Subscribe to room-specific events
         this.disposables.trackListener(props.room, RoomEvent.Name, this.onRoomChanged);
         this.disposables.trackListener(props.room, RoomEvent.Tags, this.onRoomChanged);
@@ -196,6 +200,17 @@ export class RoomListItemViewModel
      * @param participants The current call participants
      */
     private onCallParticipantsChanged = (participants: Map<RoomMember, Set<string>>): void => {
+        this.updateItem();
+    };
+
+    /**
+     * Handler for speaking state changes. The speaking ring marks who is talking in this
+     * room's call, so an update for this room rebuilds the item and an update for any other
+     * room leaves it untouched.
+     * @param roomId The room whose speaking state changed
+     */
+    private onSpeakingChanged = (roomId: string): void => {
+        if (roomId !== this.props.room.roomId) return;
         this.updateItem();
     };
 
@@ -380,7 +395,9 @@ export class RoomListItemViewModel
             call?.callType === CallType.Voice ? "voice" : call?.callType === CallType.Video ? "video" : undefined;
 
         // Voice presence: the avatars of the people in the room's call, so the room list can show
-        // who is in a call without the room being opened.
+        // who is in a call without the room being opened. `speaking` marks who is currently
+        // talking, as recorded by the speaking store for this room.
+        const speakingUserIds = SpeakingStore.instance.getSpeakingUserIds(room.roomId);
         const callParticipants: CallParticipant[] | undefined =
             call && hasParticipantsInCall
                 ? Array.from(call.participants.keys())
@@ -392,6 +409,7 @@ export class RoomListItemViewModel
                               avatarUrl: mxcAvatarUrl
                                   ? (mediaFromMxc(mxcAvatarUrl, client).srcHttp ?? undefined)
                                   : undefined,
+                              speaking: speakingUserIds.includes(member.userId),
                           };
                       })
                       .sort((a, b) => a.name.localeCompare(b.name))
