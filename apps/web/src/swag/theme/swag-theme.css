@@ -67,16 +67,26 @@ body.cpd-theme-dark {
 }
 
 /*
- * Floating surfaces get the reference treatment: a faint top sheen over
- * whatever background the theme gives them, plus a hairline border. Only
- * `background-image` is set, never `background`, so the theme's own surface
- * color always shows through untouched.
+ * The main app surfaces are opaque, so a glow behind them would never show.
+ * Each panel carries its own faint cyan aura instead, anchored to the top
+ * edge where it never sits behind running text. Only `background-image` is
+ * set, never `background`, so every theme surface color shows through.
  */
-body.cpd-theme-dark [role="dialog"],
-body.cpd-theme-dark [role="menu"] {
-    background-image: linear-gradient(rgb(255 255 255 / 5%), transparent 40%);
-    border: 1px solid rgb(255 255 255 / 10%);
+body.cpd-theme-dark .mx_LeftPanel,
+body.cpd-theme-dark .mx_RightPanel,
+body.cpd-theme-dark .mx_RoomView,
+body.cpd-theme-dark .mx_SpaceRoomView {
+    background-image: radial-gradient(
+        ellipse 90% 45% at 50% 0%,
+        rgb(103 232 249 / 8%),
+        transparent 70%
+    );
 }
+
+/* Floating surfaces keep the stock look: an earlier revision gave dialogs
+   and menus a top sheen with a hairline border, but the gradient stopped at
+   the border while the surround stayed flat, which looked worse, not better.
+   So no overrides here — only the wrapper aura below stays. */
 
 /*
  * Ambient glow behind everything floating: the dialog wrapper is a

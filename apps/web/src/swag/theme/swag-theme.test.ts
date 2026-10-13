@@ -31,13 +31,18 @@ describe("swag theme override", () => {
         expect(css).not.toContain("-hc");
     });
 
-    it("gives floating surfaces the card treatment and the login page an aura", () => {
-        expect(css).toContain('[role="dialog"]');
-        expect(css).toContain('[role="menu"]');
+    it("gives the app panels and the login page an aura, but leaves popups alone", () => {
+        for (const surface of [".mx_LeftPanel", ".mx_RightPanel", ".mx_RoomView", ".mx_SpaceRoomView"]) {
+            expect(css).toContain(surface);
+        }
         expect(css).toContain(".mx_Dialog_wrapper");
         expect(css).toContain(".mx_AuthPage");
         expect(css).toContain("radial-gradient");
-        // Sheen only: the theme's own surface colors must show through, so
+        // Dialogs and menus keep the stock look: the earlier sheen stopped at
+        // a hairline border while the surround stayed flat, which read as ugly.
+        expect(css).not.toContain('[role="dialog"]');
+        expect(css).not.toContain('[role="menu"]');
+        // Aura only: the theme's own surface colors must show through, so
         // the override sets background-image, never background.
         expect(css).not.toMatch(/^\s*background:/m);
         // The login aura carries !important: the branding code paints the
