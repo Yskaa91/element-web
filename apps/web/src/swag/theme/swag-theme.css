@@ -110,7 +110,7 @@ body.cpd-theme-dark .mx_SpacePanel,
 body.cpd-theme-dark .mx_RightPanel {
     background-image: radial-gradient(
         ellipse 100% 55% at 50% 0%,
-        rgb(103 232 249 / 4%),
+        rgb(103 232 249 / 5%),
         transparent 70%
     );
 }
@@ -119,7 +119,7 @@ body.cpd-theme-dark .mx_RoomView,
 body.cpd-theme-dark .mx_SpaceRoomView {
     background-image: radial-gradient(
         ellipse 100% 55% at 50% 0%,
-        rgb(103 232 249 / 7%),
+        rgb(103 232 249 / 8.5%),
         transparent 70%
     );
 }
@@ -154,7 +154,7 @@ body.cpd-theme-dark .mx_SearchBox {
 body.cpd-theme-dark .mx_Dialog_wrapper {
     background-image: radial-gradient(
         ellipse 60% 45% at 50% 30%,
-        rgb(103 232 249 / 7%),
+        rgb(103 232 249 / 8.5%),
         transparent 70%
     );
 }
@@ -165,7 +165,7 @@ body.cpd-theme-dark .mx_Dialog_wrapper {
 body.cpd-theme-dark .mx_AuthPage {
     background-image: radial-gradient(
         ellipse 70% 50% at 50% 0%,
-        rgb(103 232 249 / 10%),
+        rgb(103 232 249 / 12%),
         transparent 70%
     ) !important;
 }
