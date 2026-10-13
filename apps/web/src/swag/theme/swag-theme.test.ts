@@ -56,9 +56,10 @@ describe("swag theme override", () => {
         expect(css).toMatch(/\.mx_AuthPage[\s\S]*!important/);
     });
 
-    it("paints primary buttons bright cyan and tints text-entry boxes dark cyan", () => {
-        expect(css).toContain("--cpd-color-bg-action-primary-rest");
-        expect(css).toContain("cyan-1000");
+    it("paints primary buttons and selections with the sampled reference colors", () => {
+        for (const hex of ["#101a26", "#49a2c4", "#4598b8", "#418eac", "#344e63"]) {
+            expect(css).toContain(hex);
+        }
         for (const box of [".mx_BasicMessageComposer", ".mx_WysiwygComposer", ".mx_SearchBox"]) {
             expect(css).toContain(box);
         }

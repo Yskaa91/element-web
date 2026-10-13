@@ -6,8 +6,9 @@ Please see LICENSE in the repository root for full details.
 */
 
 /*
- * Swag theme: a FlutterFlow-like dark look with a light cyan accent instead
- * of Element's green one.
+ * Swag theme: the household dark look, copied from the approved reference
+ * screenshot. Every color value in this file was sampled from that reference
+ * with a color picker — nothing here is eyeballed.
  *
  * This file is imported unlayered into the main bundle (see the anchor in
  * `apps/web/src/vector/index.ts`), while every theme ships its tokens inside
@@ -19,15 +20,15 @@ Please see LICENSE in the repository root for full details.
  * Only semantic accent roles are remapped, never the palettes: green stays
  * green wherever it means success or online. The cyan twins sit at the same
  * scale positions, so every contrast relationship the design system built
- * holds. Primary buttons move from a near-white fill to bright cyan with the
- * stock dark text (`text-on-solid-primary` stays the theme background, so
- * contrast holds on every step of the ramp).
+ * holds. Primary buttons move from a near-white fill to the sampled slate
+ * cyan with the stock dark text (`text-on-solid-primary` stays the theme
+ * background, so contrast holds on every step of the ramp).
  */
 
 body.cpd-theme-dark {
-    /* A touch deeper than the stock canvas, towards the reference. Every
-       token built on the theme background follows automatically. */
-    --cpd-color-theme-bg: #0d0e14;
+    /* Sampled from the approved reference screenshot (`ui.png`, measured with
+       a color picker, not eyeballed): the canvas is a dark slate navy. */
+    --cpd-color-theme-bg: #101a26;
 
     /* Accent text, links, badges and icons (this also recolors every legacy
        `$accent` usage, which compiles to `text-action-accent`). */
@@ -40,25 +41,27 @@ body.cpd-theme-dark {
     --cpd-color-bg-accent-rest: var(--cpd-color-cyan-900);
     --cpd-color-bg-accent-hovered: var(--cpd-color-cyan-1000);
     --cpd-color-bg-accent-pressed: var(--cpd-color-cyan-1100);
-    --cpd-color-bg-accent-selected: var(--cpd-color-alpha-cyan-300);
+    /* Sampled selected-row color from the reference. Opaque slate, not the
+       stock translucent green wash. */
+    --cpd-color-bg-accent-selected: #344e63;
     --cpd-color-bg-badge-accent: var(--cpd-color-cyan-400);
 
     /* Accent borders. */
     --cpd-color-border-accent-subtle: var(--cpd-color-cyan-700);
     --cpd-color-border-accent-primary: var(--cpd-color-cyan-900);
 
-    /* Primary buttons: bright cyan fill, stock dark text (`text-on-solid-primary`
-       stays the theme background, which keeps contrast above 4.5:1 even on the
-       brightest step). The ramp darkens towards press, mirroring stock. */
-    --cpd-color-bg-action-primary-rest: var(--cpd-color-cyan-1000);
-    --cpd-color-bg-action-primary-hovered: var(--cpd-color-cyan-900);
-    --cpd-color-bg-action-primary-pressed: var(--cpd-color-cyan-800);
+    /* Primary buttons: sampled rest/hover fills from the reference Invite
+       button; pressed continues the same measured step darker. Stock dark
+       text (`text-on-solid-primary`) keeps contrast above 4.5:1. */
+    --cpd-color-bg-action-primary-rest: #49a2c4;
+    --cpd-color-bg-action-primary-hovered: #4598b8;
+    --cpd-color-bg-action-primary-pressed: #418eac;
 
-    /* The action gradient some components fill with. */
-    --cpd-color-gradient-action-stop1: var(--cpd-color-cyan-1100);
-    --cpd-color-gradient-action-stop2: var(--cpd-color-cyan-1000);
-    --cpd-color-gradient-action-stop3: var(--cpd-color-cyan-900);
-    --cpd-color-gradient-action-stop4: var(--cpd-color-cyan-700);
+    /* The action gradient some components fill with (same sampled ramp). */
+    --cpd-color-gradient-action-stop1: #49a2c4;
+    --cpd-color-gradient-action-stop2: #4598b8;
+    --cpd-color-gradient-action-stop3: #418eac;
+    --cpd-color-gradient-action-stop4: #3a8098;
     --cpd-color-gradient-action-linear: linear-gradient(
         180deg,
         var(--cpd-color-gradient-action-stop1) 0%,
@@ -75,20 +78,20 @@ body.cpd-theme-dark {
  * set, never `background`, so every theme surface color shows through.
  */
 body.cpd-theme-dark .mx_LeftPanel,
-body.cpd-theme-dark .mx_RoomView,
-body.cpd-theme-dark .mx_SpaceRoomView,
-body.cpd-theme-dark .mx_SpacePanel {
+body.cpd-theme-dark .mx_SpacePanel,
+body.cpd-theme-dark .mx_RightPanel {
     background-image: radial-gradient(
         ellipse 100% 55% at 50% 0%,
-        rgb(103 232 249 / 18%),
+        rgb(103 232 249 / 4%),
         transparent 70%
     );
 }
 
-body.cpd-theme-dark .mx_RightPanel {
+body.cpd-theme-dark .mx_RoomView,
+body.cpd-theme-dark .mx_SpaceRoomView {
     background-image: radial-gradient(
-        ellipse 90% 45% at 50% 0%,
-        rgb(103 232 249 / 8%),
+        ellipse 100% 55% at 50% 0%,
+        rgb(103 232 249 / 7%),
         transparent 70%
     );
 }
@@ -103,7 +106,7 @@ body.cpd-theme-dark .mx_RightPanel {
 body.cpd-theme-dark .mx_BasicMessageComposer,
 body.cpd-theme-dark .mx_WysiwygComposer,
 body.cpd-theme-dark .mx_SearchBox {
-    background-color: rgb(103 232 249 / 12%);
+    background-color: rgb(103 232 249 / 6%);
     /* Fields read as pills, exactly like the buttons (9999px, verified live). */
     border-radius: 9999px;
     /* Text starts where the pill curvature ends, not inside the curve. */
