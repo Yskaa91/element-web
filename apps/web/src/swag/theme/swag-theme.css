@@ -59,7 +59,15 @@ body.cpd-theme-dark {
     --cpd-color-text-badge-info: #101a26;
     --cpd-color-icon-info-primary: var(--cpd-color-cyan-1100);
 
-body.cpd-theme-dark .mx_RoomSummaryCard_badges [data-kind="blue"] svg {
+body.cpd-theme-dark .mx_RoomSummaryCard_badges [data-kind="blue"] svg,
+body.cpd-theme-dark .mx_RoomSummaryCard_badges [data-kind="green"] svg {
+    color: #101a26;
+}
+
+/* The Encrypted pill is `Badge kind="green"` on the dark accent roles. In
+   the room card it matches the buttons too: bright fill, dark text. */
+body.cpd-theme-dark .mx_RoomSummaryCard_badges [data-kind="green"] {
+    background: #49a2c4;
     color: #101a26;
 }
 

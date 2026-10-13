@@ -69,6 +69,8 @@ describe("swag theme override", () => {
         }
         // Badge icons go dark like the button icons, scoped to the room card
         // so info icons on dark surfaces elsewhere keep their cyan.
+        // The Encrypted pill is kind="green" on the dark accent roles; in the
+        // card it takes the button fill too.
         expect(css).toContain(".mx_RoomSummaryCard_badges");
         for (const box of [".mx_BasicMessageComposer", ".mx_WysiwygComposer", ".mx_SearchBox"]) {
             expect(css).toContain(box);
