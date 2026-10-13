@@ -58,11 +58,12 @@ body.cpd-theme-dark {
     --cpd-color-bg-badge-info: #49a2c4;
     --cpd-color-text-badge-info: #101a26;
     --cpd-color-icon-info-primary: var(--cpd-color-cyan-1100);
+}
 
 /* Room-card badges match the primary buttons exactly: bright fill, dark
-   text and icons. One flat selector list (no `body` ancestor): the minifier
-   mangled a `body.cpd-theme-dark`-prefixed version of these rules into a
-   `body ... body` selector that never matches (seen live in swag.24). */
+   text and icons. These rules must stay top-level, outside the token block
+   above — nested inside it, postcss-nested would resolve them to a
+   `body ... body` selector that never matches (the swag.24 bug). */
 .cpd-theme-dark .mx_RoomSummaryCard_badges [data-kind="blue"],
 .cpd-theme-dark .mx_RoomSummaryCard_badges [data-kind="green"] {
     background: #49a2c4;
@@ -93,7 +94,6 @@ body.cpd-theme-dark {
         var(--cpd-color-gradient-action-stop3) 66%,
         var(--cpd-color-gradient-action-stop4) 100%
     );
-}
 
 /*
  * The main app surfaces are opaque, so a glow behind them would never show.
