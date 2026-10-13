@@ -52,10 +52,16 @@ body.cpd-theme-dark {
 
     /* Blue badges (`Badge kind="blue"`: Public room, history visibility) use
        the info roles; the green kind already lands on the cyan accent roles.
-       Positional cyan twins so badge contrast holds. */
-    --cpd-color-bg-badge-info: var(--cpd-color-cyan-400);
-    --cpd-color-text-badge-info: var(--cpd-color-cyan-1100);
+       Styled exactly like the primary buttons: sampled bright fill, dark
+       text. `icon-info-primary` stays cyan for the many info icons on dark
+       surfaces — only the badge icons go dark, scoped to the room card. */
+    --cpd-color-bg-badge-info: #49a2c4;
+    --cpd-color-text-badge-info: #101a26;
     --cpd-color-icon-info-primary: var(--cpd-color-cyan-1100);
+
+body.cpd-theme-dark .mx_RoomSummaryCard_badges [data-kind="blue"] svg {
+    color: #101a26;
+}
 
     /* Primary buttons: sampled rest/hover fills from the reference Invite
        button; pressed continues the same measured step darker. Stock dark

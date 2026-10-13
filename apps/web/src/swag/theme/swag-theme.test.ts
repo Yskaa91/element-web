@@ -67,6 +67,9 @@ describe("swag theme override", () => {
         ]) {
             expect(css).toContain(token);
         }
+        // Badge icons go dark like the button icons, scoped to the room card
+        // so info icons on dark surfaces elsewhere keep their cyan.
+        expect(css).toContain(".mx_RoomSummaryCard_badges");
         for (const box of [".mx_BasicMessageComposer", ".mx_WysiwygComposer", ".mx_SearchBox"]) {
             expect(css).toContain(box);
         }
