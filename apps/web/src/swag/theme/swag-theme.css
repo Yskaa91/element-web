@@ -76,10 +76,11 @@ body.cpd-theme-dark {
  */
 body.cpd-theme-dark .mx_LeftPanel,
 body.cpd-theme-dark .mx_RoomView,
-body.cpd-theme-dark .mx_SpaceRoomView {
+body.cpd-theme-dark .mx_SpaceRoomView,
+body.cpd-theme-dark .mx_SpacePanel {
     background-image: radial-gradient(
         ellipse 100% 55% at 50% 0%,
-        rgb(103 232 249 / 14%),
+        rgb(103 232 249 / 18%),
         transparent 70%
     );
 }
@@ -105,6 +106,8 @@ body.cpd-theme-dark .mx_SearchBox {
     background-color: rgb(103 232 249 / 12%);
     /* Fields read as pills, exactly like the buttons (9999px, verified live). */
     border-radius: 9999px;
+    /* Text starts where the pill curvature ends, not inside the curve. */
+    padding-inline-start: 24px;
 }
 
 /* Floating surfaces keep the stock look: an earlier revision gave dialogs

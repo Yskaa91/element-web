@@ -32,7 +32,13 @@ describe("swag theme override", () => {
     });
 
     it("gives the app panels and the login page an aura, but leaves popups alone", () => {
-        for (const surface of [".mx_LeftPanel", ".mx_RightPanel", ".mx_RoomView", ".mx_SpaceRoomView"]) {
+        for (const surface of [
+            ".mx_LeftPanel",
+            ".mx_RightPanel",
+            ".mx_RoomView",
+            ".mx_SpaceRoomView",
+            ".mx_SpacePanel",
+        ]) {
             expect(css).toContain(surface);
         }
         expect(css).toContain(".mx_Dialog_wrapper");
@@ -56,8 +62,10 @@ describe("swag theme override", () => {
         for (const box of [".mx_BasicMessageComposer", ".mx_WysiwygComposer", ".mx_SearchBox"]) {
             expect(css).toContain(box);
         }
-        // Fields are pills exactly like the buttons (9999px, verified live).
+        // Fields are pills exactly like the buttons (9999px, verified live),
+        // with text starting where the curvature ends.
         expect(css).toContain("border-radius: 9999px");
+        expect(css).toContain("padding-inline-start: 24px");
     });
 
     it("remaps the accent roles to the cyan scale, never the green palette", () => {
