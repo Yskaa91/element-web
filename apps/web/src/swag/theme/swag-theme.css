@@ -75,6 +75,9 @@ body.cpd-theme-dark {
     color: #101a26;
 }
 
+/* Primary-button tokens live in their own block: custom properties are only
+   valid inside a rule, never top-level (the swag.26 bug). */
+body.cpd-theme-dark {
     /* Primary buttons: sampled rest/hover fills from the reference Invite
        button; pressed continues the same measured step darker. Stock dark
        text (`text-on-solid-primary`) keeps contrast above 4.5:1. */
@@ -94,6 +97,7 @@ body.cpd-theme-dark {
         var(--cpd-color-gradient-action-stop3) 66%,
         var(--cpd-color-gradient-action-stop4) 100%
     );
+}
 
 /*
  * The main app surfaces are opaque, so a glow behind them would never show.
