@@ -56,6 +56,8 @@ describe("swag theme override", () => {
         for (const box of [".mx_BasicMessageComposer", ".mx_WysiwygComposer", ".mx_SearchBox"]) {
             expect(css).toContain(box);
         }
+        // Fields are pills exactly like the buttons (9999px, verified live).
+        expect(css).toContain("border-radius: 9999px");
     });
 
     it("remaps the accent roles to the cyan scale, never the green palette", () => {

@@ -103,6 +103,8 @@ body.cpd-theme-dark .mx_BasicMessageComposer,
 body.cpd-theme-dark .mx_WysiwygComposer,
 body.cpd-theme-dark .mx_SearchBox {
     background-color: rgb(103 232 249 / 12%);
+    /* Fields read as pills, exactly like the buttons (9999px, verified live). */
+    border-radius: 9999px;
 }
 
 /* Floating surfaces keep the stock look: an earlier revision gave dialogs
