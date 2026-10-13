@@ -43,11 +43,19 @@ describe("swag theme override", () => {
         expect(css).not.toContain('[role="dialog"]');
         expect(css).not.toContain('[role="menu"]');
         // Aura only: the theme's own surface colors must show through, so
-        // the override sets background-image, never background.
+        // the override sets background-image, never the background shorthand.
         expect(css).not.toMatch(/^\s*background:/m);
         // The login aura carries !important: the branding code paints the
         // stock photo through an inline style, which beats any normal rule.
         expect(css).toMatch(/\.mx_AuthPage[\s\S]*!important/);
+    });
+
+    it("paints primary buttons bright cyan and tints text-entry boxes dark cyan", () => {
+        expect(css).toContain("--cpd-color-bg-action-primary-rest");
+        expect(css).toContain("cyan-1000");
+        for (const box of [".mx_BasicMessageComposer", ".mx_WysiwygComposer", ".mx_SearchBox"]) {
+            expect(css).toContain(box);
+        }
     });
 
     it("remaps the accent roles to the cyan scale, never the green palette", () => {

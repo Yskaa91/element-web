@@ -19,9 +19,9 @@ Please see LICENSE in the repository root for full details.
  * Only semantic accent roles are remapped, never the palettes: green stays
  * green wherever it means success or online. The cyan twins sit at the same
  * scale positions, so every contrast relationship the design system built
- * holds. Primary buttons move from a near-white fill to cyan with the stock
- * near-white text (`cyan-800` keeps white text above 4.5:1; the hovered and
- * pressed steps go darker, mirroring the stock ramp).
+ * holds. Primary buttons move from a near-white fill to bright cyan with the
+ * stock dark text (`text-on-solid-primary` stays the theme background, so
+ * contrast holds on every step of the ramp).
  */
 
 body.cpd-theme-dark {
@@ -47,16 +47,18 @@ body.cpd-theme-dark {
     --cpd-color-border-accent-subtle: var(--cpd-color-cyan-700);
     --cpd-color-border-accent-primary: var(--cpd-color-cyan-900);
 
-    /* Primary buttons: cyan fill, stock near-white text. */
-    --cpd-color-bg-action-primary-rest: var(--cpd-color-cyan-800);
-    --cpd-color-bg-action-primary-hovered: var(--cpd-color-cyan-700);
-    --cpd-color-bg-action-primary-pressed: var(--cpd-color-cyan-500);
+    /* Primary buttons: bright cyan fill, stock dark text (`text-on-solid-primary`
+       stays the theme background, which keeps contrast above 4.5:1 even on the
+       brightest step). The ramp darkens towards press, mirroring stock. */
+    --cpd-color-bg-action-primary-rest: var(--cpd-color-cyan-1000);
+    --cpd-color-bg-action-primary-hovered: var(--cpd-color-cyan-900);
+    --cpd-color-bg-action-primary-pressed: var(--cpd-color-cyan-800);
 
     /* The action gradient some components fill with. */
     --cpd-color-gradient-action-stop1: var(--cpd-color-cyan-1100);
-    --cpd-color-gradient-action-stop2: var(--cpd-color-cyan-900);
-    --cpd-color-gradient-action-stop3: var(--cpd-color-cyan-700);
-    --cpd-color-gradient-action-stop4: var(--cpd-color-cyan-500);
+    --cpd-color-gradient-action-stop2: var(--cpd-color-cyan-1000);
+    --cpd-color-gradient-action-stop3: var(--cpd-color-cyan-900);
+    --cpd-color-gradient-action-stop4: var(--cpd-color-cyan-700);
     --cpd-color-gradient-action-linear: linear-gradient(
         180deg,
         var(--cpd-color-gradient-action-stop1) 0%,
@@ -73,14 +75,34 @@ body.cpd-theme-dark {
  * set, never `background`, so every theme surface color shows through.
  */
 body.cpd-theme-dark .mx_LeftPanel,
-body.cpd-theme-dark .mx_RightPanel,
 body.cpd-theme-dark .mx_RoomView,
 body.cpd-theme-dark .mx_SpaceRoomView {
+    background-image: radial-gradient(
+        ellipse 100% 55% at 50% 0%,
+        rgb(103 232 249 / 14%),
+        transparent 70%
+    );
+}
+
+body.cpd-theme-dark .mx_RightPanel {
     background-image: radial-gradient(
         ellipse 90% 45% at 50% 0%,
         rgb(103 232 249 / 8%),
         transparent 70%
     );
+}
+
+/*
+ * Text-entry boxes carry a dark cyan tint so the search fields and the
+ * message composer read as cyan surfaces. A translucent tint over the theme
+ * surface (never an opaque fill) keeps placeholder and typed text contrast
+ * exactly as the theme built it. Dialog inputs are deliberately excluded:
+ * popups keep the stock look.
+ */
+body.cpd-theme-dark .mx_BasicMessageComposer,
+body.cpd-theme-dark .mx_WysiwygComposer,
+body.cpd-theme-dark .mx_SearchBox {
+    background-color: rgb(103 232 249 / 12%);
 }
 
 /* Floating surfaces keep the stock look: an earlier revision gave dialogs
