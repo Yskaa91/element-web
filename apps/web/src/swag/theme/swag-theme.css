@@ -50,6 +50,13 @@ body.cpd-theme-dark {
     --cpd-color-border-accent-subtle: var(--cpd-color-cyan-700);
     --cpd-color-border-accent-primary: var(--cpd-color-cyan-900);
 
+    /* Blue badges (`Badge kind="blue"`: Public room, history visibility) use
+       the info roles; the green kind already lands on the cyan accent roles.
+       Positional cyan twins so badge contrast holds. */
+    --cpd-color-bg-badge-info: var(--cpd-color-cyan-400);
+    --cpd-color-text-badge-info: var(--cpd-color-cyan-1100);
+    --cpd-color-icon-info-primary: var(--cpd-color-cyan-1100);
+
     /* Primary buttons: sampled rest/hover fills from the reference Invite
        button; pressed continues the same measured step darker. Stock dark
        text (`text-on-solid-primary`) keeps contrast above 4.5:1. */

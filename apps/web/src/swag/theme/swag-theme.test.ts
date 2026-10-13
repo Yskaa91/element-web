@@ -60,6 +60,13 @@ describe("swag theme override", () => {
         for (const hex of ["#101a26", "#49a2c4", "#4598b8", "#418eac", "#344e63"]) {
             expect(css).toContain(hex);
         }
+        for (const token of [
+            "--cpd-color-bg-badge-info",
+            "--cpd-color-text-badge-info",
+            "--cpd-color-icon-info-primary",
+        ]) {
+            expect(css).toContain(token);
+        }
         for (const box of [".mx_BasicMessageComposer", ".mx_WysiwygComposer", ".mx_SearchBox"]) {
             expect(css).toContain(box);
         }
