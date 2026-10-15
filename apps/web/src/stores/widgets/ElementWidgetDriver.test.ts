@@ -905,6 +905,126 @@ describe("ElementWidgetDriver", () => {
                 ),
             ).toEqual([event2.getEffectiveEvent()]);
         });
+
+        describe("current state merging", () => {
+            const currentBoard = mkEvent({
+                event: true,
+                id: "$soundboard-current",
+                type: "io.element.call.soundboard",
+                user: "@alice:example.org",
+                skey: "",
+                ts: 2000,
+                content: { source: "state" },
+                room: "!1:example.org",
+            });
+            const olderBoard = mkEvent({
+                event: true,
+                id: "$soundboard-old",
+                type: "io.element.call.soundboard",
+                user: "@alice:example.org",
+                skey: "",
+                ts: 1000,
+                content: { source: "timeline" },
+                room: "!1:example.org",
+            });
+
+            function stubRoom(timelineEvents: MatrixEvent[], stateEvents: MatrixEvent[]): void {
+                client.getRoom.mockReturnValue({
+                    getLiveTimeline: () => ({
+                        getEvents: () => timelineEvents,
+                        getState: () => ({
+                            getStateEvents: (type: string) => stateEvents.filter((e) => e.getType() === type),
+                        }),
+                    }),
+                } as unknown as Room);
+            }
+
+            it("includes current state events missing from the timeline window", async () => {
+                stubRoom([olderBoard], [currentBoard]);
+                expect(
+                    await driver.readRoomTimeline(
+                        "!1:example.org",
+                        "io.element.call.soundboard",
+                        undefined,
+                        undefined,
+                        0,
+                        undefined,
+                    ),
+                ).toEqual([currentBoard, olderBoard].map((e) => e.getEffectiveEvent()));
+            });
+
+            it("does not duplicate events already in the timeline", async () => {
+                const boardInTimeline = mkEvent({
+                    event: true,
+                    id: "$soundboard-current",
+                    type: "io.element.call.soundboard",
+                    user: "@alice:example.org",
+                    skey: "",
+                    ts: 2000,
+                    content: { source: "timeline" },
+                    room: "!1:example.org",
+                });
+                stubRoom([boardInTimeline], [currentBoard]);
+                expect(
+                    await driver.readRoomTimeline(
+                        "!1:example.org",
+                        "io.element.call.soundboard",
+                        undefined,
+                        undefined,
+                        0,
+                        undefined,
+                    ),
+                ).toEqual([boardInTimeline.getEffectiveEvent()]);
+            });
+
+            it("applies state key filtering to merged current state events", async () => {
+                const otherBoard = mkEvent({
+                    event: true,
+                    id: "$soundboard-other",
+                    type: "io.element.call.soundboard",
+                    user: "@alice:example.org",
+                    skey: "other",
+                    ts: 3000,
+                    content: {},
+                    room: "!1:example.org",
+                });
+                stubRoom([], [currentBoard, otherBoard]);
+                expect(
+                    await driver.readRoomTimeline(
+                        "!1:example.org",
+                        "io.element.call.soundboard",
+                        undefined,
+                        "",
+                        0,
+                        undefined,
+                    ),
+                ).toEqual([currentBoard.getEffectiveEvent()]);
+            });
+
+            it("respects the limit on the merged result", async () => {
+                const newestBoard = mkEvent({
+                    event: true,
+                    id: "$soundboard-newest",
+                    type: "io.element.call.soundboard",
+                    user: "@alice:example.org",
+                    skey: "",
+                    ts: 3000,
+                    content: {},
+                    room: "!1:example.org",
+                });
+                stubRoom([olderBoard], [currentBoard, newestBoard]);
+                expect(
+                    await driver.readRoomTimeline(
+                        "!1:example.org",
+                        "io.element.call.soundboard",
+                        undefined,
+                        undefined,
+                        2,
+                        undefined,
+                    ),
+                ).toEqual([newestBoard, currentBoard].map((e) => e.getEffectiveEvent()));
+            });
+        });
     });
 
     describe("readRoomState", () => {

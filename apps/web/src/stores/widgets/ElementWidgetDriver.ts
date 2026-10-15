@@ -640,7 +640,23 @@ export class ElementWidgetDriver extends WidgetDriver {
         limit = limit > 0 ? Math.min(limit, Number.MAX_SAFE_INTEGER) : Number.MAX_SAFE_INTEGER; // relatively arbitrary
         const room = MatrixClientPeg.safeGet().getRoom(roomId);
         if (room === null) return [];
-        return [...this.readRoomTimelineIterator(room, eventType, msgtype, stateKey, limit, since)];
+        const events = [...this.readRoomTimelineIterator(room, eventType, msgtype, stateKey, limit, since)];
+        // Widget state reads (MSC2876 read_events with a state key) are served from the live
+        // timeline, which only holds a bounded recent window. Merge in the matching events from
+        // the room's current state, which is complete, so historical state events (m.space.parent,
+        // old soundboard versions) are still returned. Current-state versions are the newest.
+        const state = room.getLiveTimeline().getState?.(Direction.Forward);
+        if (state !== undefined) {
+            const seen = new Set(events.map((e) => e.event_id));
+            const stateEvents = state
+                .getStateEvents(eventType)
+                .filter((e) => stateKey === undefined || e.getStateKey() === stateKey)
+                .map((e) => e.getEffectiveEvent() as IRoomEvent)
+                .filter((e) => !seen.has(e.event_id))
+                .sort((a, b) => b.origin_server_ts - a.origin_server_ts);
+            events.unshift(...stateEvents);
+        }
+        return events.slice(0, limit);
     }
 
     /**
